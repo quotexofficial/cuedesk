@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CUEDESK</title>
+    
+    <!-- Supabase ES Module Import Map -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+        }
+      }
+    </script>
+
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Table Overview Section Styles */
+        .status-overview-panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin: 1.5rem 2rem 0 2rem;
+            box-shadow: var(--shadow-card);
+        }
+        .overview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .overview-title {
+            color: var(--gold-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .overview-stats {
+            display: flex;
+            gap: 1rem;
+        }
+        .stat-pill {
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .stat-pill.playing {
+            background: rgba(0, 180, 216, 0.15);
+            color: var(--badge-playing);
+            border: 1px solid rgba(0, 180, 216, 0.3);
+        }
+        .stat-pill.available {
+            background: rgba(42, 157, 143, 0.15);
+            color: var(--badge-available);
+            border: 1px solid rgba(42, 157, 143, 0.3);
+        }
+        .table-indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 1rem;
+        }
+        .table-indicator-item {
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+        .table-indicator-item.is-playing {
+            border-color: var(--badge-playing);
+            box-shadow: 0 0 10px rgba(0, 180, 216, 0.2);
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--badge-available);
+        }
+        .is-playing .status-dot {
+            background-color: var(--badge-playing);
+            box-shadow: 0 0 8px var(--badge-playing);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.8);
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="brand-title">CUEDESK</h1>
+                <p class="brand-subtitle">Snooker Management</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active"><span>🎱</span> Tables & Games</a>
+                <a href="history.html" class="nav-item"><span>📊</span> Session History</a>
+                <a href="settings.html" class="nav-item"><span>⚙️</span> Settings & Rates</a>
+                <button id="logout-btn" class="nav-item" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; margin-top: auto;"><span>🚪</span> Sign Out</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-content">
+            <header class="top-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="mobile-menu-toggle" class="mobile-menu-toggle">☰</button>
+                    <h2 class="header-title">Tables & Games</h2>
+                </div>
+                <div class="owner-profile">
+                    <div class="profile-info">
+                        <span class="profile-name">Club Owner</span>
+                        <span class="profile-role">Administrator</span>
+                    </div>
+                    <div class="profile-avatar">CD</div>
+                </div>
+            </header>
+
+            <!-- Table Status Overview Section -->
+            <section class="status-overview-panel">
+                <div class="overview-header">
+                    <h3 class="overview-title">Table Live Status</h3>
+                    <div class="overview-stats">
+                        <span class="stat-pill playing"><span id="count-playing">0</span> Playing</span>
+                        <span class="stat-pill available"><span id="count-available">5</span> Available</span>
+                    </div>
+                </div>
+                <div class="table-indicators-grid" id="indicators-container">
+                    <script>
+                        for(let i=1; i<=5; i++) {
+                            document.write(`
+                                <div class="table-indicator-item" id="indicator-item-${i}">
+                                    <span style="font-weight: 600; font-size: 0.9rem;">Table ${i}</span>
+                                    <div class="status-dot" id="dot-${i}"></div>
+                                </div>
+                            `);
+                        }
+                    </script>
+                </div>
+            </section>
+
+            <main style="padding: 0; flex: 1;">
+                <div class="tables-grid" id="tables-container">
+                    <script>
+                        for(let i=1; i<=5; i++) {
+                            document.write(`
+                                <div class="snooker-table-card" data-table-id="${i}">
+                                    <div class="table-info-header">
+                                        <h3 class="table-name">Table ${i}</h3>
+                                        <span class="badge badge-available" id="status-badge-${i}">Available</span>
+                                    </div>
+                                    <div class="table-image-wrapper">
+                                        <img src="https://image.made-in-china.com/202f0j00WZfqUNLnEgrm/Snooker-Pool-Table-Billiard-Table-with-Precise-Pockets-Smooth-Cloth.webp" alt="Snooker Table ${i}">
+                                    </div>
+                                    <div class="card-footer-info">
+                                        <div class="timer-display" id="timer-${i}">00:00:00</div>
+                                        <button class="btn btn-primary manage-btn" data-table="${i}">Manage Game</button>
+                                    </div>
+                                </div>
+                            `);
+                        }
+                    </script>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Manage Game Modal -->
+    <div id="manage-modal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <h3 id="modal-table-title" style="color: var(--gold-primary); margin-bottom: 1.5rem;">Manage Table</h3>
+            
+            <form id="game-form">
+                <input type="hidden" id="active-table-id">
+                
+                <div class="form-group">
+                    <label class="form-label">Select Game Type</label>
+                    <select id="game-type" class="form-select" required>
+                        <option value="one-ball">One Ball</option>
+                        <option value="six-ball">Six Ball</option>
+                        <option value="full-frame">Full Frame</option>
+                        <option value="century">Century (Time Based)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="format-group">
+                    <label class="form-label">Game Format</label>
+                    <select id="game-format" class="form-select">
+                        <option value="single">Single</option>
+                        <option value="double">Double</option>
+                    </select>
+                </div>
+
+                <div id="price-preview" style="background: rgba(212,175,55,0.08); padding: 0.75rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--gold-light);">
+                    Loading Rates...
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;" id="modal-action-btn">Start Game</button>
+                    <button type="button" class="btn" id="modal-cancel-btn" style="background: #2a2a2a; color: var(--text-main); flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const timerIntervals = {};
+            const modal = document.getElementById('manage-modal');
+            const gameTypeSelect = document.getElementById('game-type');
+            const formatGroup = document.getElementById('format-group');
+            const formatSelect = document.getElementById('game-format');
+            const pricePreview = document.getElementById('price-preview');
+            const activeTableInput = document.getElementById('active-table-id');
+            const modalTableTitle = document.getElementById('modal-table-title');
+            const modalActionBtn = document.getElementById('modal-action-btn');
+
+            function getRates() {
+                const defaultRates = {
+                    century: 7,
+                    oneballSingle: 100,
+                    oneballDouble: 200,
+                    fullframeSingle: 150,
+                    fullframeDouble: 300
+                };
+                const saved = JSON.parse(localStorage.getItem('bt_rates') || '{}');
+                return { ...defaultRates, ...saved };
+            }
+
+            function updateOverviewCounts() {
+                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                const playingCount = Object.keys(activeSessions).length;
+                const totalTables = 5;
+                const availableCount = totalTables - playingCount;
+
+                document.getElementById('count-playing').textContent = playingCount;
+                document.getElementById('count-available').textContent = availableCount;
+
+                for (let i = 1; i <= totalTables; i++) {
+                    const item = document.getElementById(`indicator-item-${i}`);
+                    if (activeSessions[i]) {
+                        item.classList.add('is-playing');
+                    } else {
+                        item.classList.remove('is-playing');
+                    }
+                }
+            }
+
+            function initPersistentSessions() {
+                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                for (let tableId in activeSessions) {
+                    const session = activeSessions[tableId];
+                    if (session && session.startTime) {
+                        startTimerUI(tableId, session.startTime);
+                        updateBadge(tableId, 'Playing', 'badge-playing');
+                    }
+                }
+                updateOverviewCounts();
+            }
+
+            function updateBadge(tableId, text, className) {
+                const badge = document.getElementById(`status-badge-${tableId}`);
+                if(badge) {
+                    badge.textContent = text;
+                    badge.className = `badge ${className}`;
+                }
+            }
+
+            function startTimerUI(tableId, startTime) {
+                if (timerIntervals[tableId]) clearInterval(timerIntervals[tableId]);
+                
+                timerIntervals[tableId] = setInterval(() => {
+                    const elapsedMs = Date.now() - startTime;
+                    const totalSecs = Math.floor(elapsedMs / 1000);
+                    const hrs = String(Math.floor(totalSecs / 3600)).padStart(2, '0');
+                    const mins = String(Math.floor((totalSecs % 3600) / 60)).padStart(2, '0');
+                    const secs = String(totalSecs % 60).padStart(2, '0');
+                    const timerElem = document.getElementById(`timer-${tableId}`);
+                    if(timerElem) timerElem.textContent = `${hrs}:${mins}:${secs}`;
+                }, 1000);
+            }
+
+            document.querySelectorAll('.manage-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tableId = btn.getAttribute('data-table');
+                    openManageModal(tableId);
+                });
+            });
+
+            function openManageModal(tableId) {
+                activeTableInput.value = tableId;
+                modalTableTitle.textContent = `Manage Table ${tableId}`;
+                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                
+                if (activeSessions[tableId]) {
+                    modalActionBtn.textContent = 'End Game & Save Bill';
+                    modalActionBtn.style.background = '#e76f51';
+                } else {
+                    modalActionBtn.textContent = 'Start Game';
+                    modalActionBtn.style.background = 'linear-gradient(135deg, var(--gold-primary), var(--gold-dark))';
+                }
+                updateFormatOptions();
+                modal.classList.add('active');
+            }
+
+            function closeManageModal() { modal.classList.remove('active'); }
+            document.getElementById('modal-close-btn').addEventListener('click', closeManageModal);
+            document.getElementById('modal-cancel-btn').addEventListener('click', closeManageModal);
+
+            gameTypeSelect.addEventListener('change', updateFormatOptions);
+
+            function updateFormatOptions() {
+                const type = gameTypeSelect.value;
+                const rates = getRates();
+
+                if (type === 'century') {
+                    formatGroup.style.display = 'none';
+                    pricePreview.textContent = `Rate: Rs. ${rates.century} / Min (Time Based)`;
+                } else if (type === 'full-frame') {
+                    formatGroup.style.display = 'block';
+                    formatSelect.innerHTML = `<option value="single">Single (Rs. ${rates.fullframeSingle})</option><option value="double">Double (Rs. ${rates.fullframeDouble})</option>`;
+                    pricePreview.textContent = `Rate: Single Rs. ${rates.fullframeSingle} | Double Rs. ${rates.fullframeDouble}`;
+                } else {
+                    formatGroup.style.display = 'block';
+                    formatSelect.innerHTML = `<option value="single">Single (Rs. ${rates.oneballSingle})</option><option value="double">Double (Rs. ${rates.oneballDouble})</option>`;
+                    pricePreview.textContent = `Rate: Single Rs. ${rates.oneballSingle} | Double Rs. ${rates.oneballDouble}`;
+                }
+            }
+
+            document.getElementById('game-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const tableId = activeTableInput.value;
+                const gameType = gameTypeSelect.value;
+                const format = formatSelect.value;
+                const rates = getRates();
+                let activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+
+                if (activeSessions[tableId]) {
+                    // END GAME
+                    clearInterval(timerIntervals[tableId]);
+                    const session = activeSessions[tableId];
+                    const durationSecs = Math.floor((Date.now() - session.startTime) / 1000);
+                    const durationMins = Math.max(1, Math.ceil(durationSecs / 60));
+
+                    let bill = 0;
+                    if (session.gameType === 'century') {
+                        bill = durationMins * rates.century;
+                    } else if (session.gameType === 'full-frame') {
+                        bill = session.format === 'single' ? rates.fullframeSingle : rates.fullframeDouble;
+                    } else {
+                        bill = session.format === 'single' ? rates.oneballSingle : rates.oneballDouble;
+                    }
+
+                    const sessionPayload = {
+                        table_id: parseInt(tableId),
+                        game_type: String(session.gameType).toUpperCase(),
+                        game_format: session.gameType === 'century' ? 'N/A' : String(session.format).toUpperCase(),
+                        duration_minutes: parseInt(durationMins),
+                        total_bill: parseFloat(bill)
+                    };
+
+                    const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
+                    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    localHistory.unshift({
+                        tableId,
+                        gameType: sessionPayload.game_type,
+                        format: sessionPayload.game_format,
+                        duration: `${durationMins} mins`,
+                        bill,
+                        time: timeString
+                    });
+                    localStorage.setItem('bare_tallies_history', JSON.stringify(localHistory));
+
+                    try {
+                        const { error } = await supabase.from('game_sessions').insert([sessionPayload]);
+                        if (error) throw error;
+                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\nSaved to Cloud Database successfully!`);
+                    } catch (err) {
+                        console.error('Database Save Error:', err.message);
+                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\n(Saved to Local Session History)`);
+                    }
+
+                    delete activeSessions[tableId];
+                    localStorage.setItem('bt_active_sessions', JSON.stringify(activeSessions));
+
+                    updateBadge(tableId, 'Available', 'badge-available');
+                    document.getElementById(`timer-${tableId}`).textContent = '00:00:00';
+
+                } else {
+                    // START GAME
+                    const startTime = Date.now();
+                    activeSessions[tableId] = { startTime, gameType, format };
+                    localStorage.setItem('bt_active_sessions', JSON.stringify(activeSessions));
+                    
+                    startTimerUI(tableId, startTime);
+                    updateBadge(tableId, 'Playing', 'badge-playing');
+                }
+
+                updateOverviewCounts();
+                closeManageModal();
+            });
+
+            initPersistentSessions();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings & Rates - CUEDESK</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .settings-container {
+            padding: 2rem;
+            max-width: 800px;
+        }
+        .settings-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-card);
+        }
+        .settings-title {
+            color: var(--gold-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="brand-title">CUEDESK</h1>
+                <p class="brand-subtitle">Snooker Management</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><span>🎱</span> Tables & Games</a>
+                <a href="history.html" class="nav-item"><span>📊</span> Session History</a>
+                <a href="settings.html" class="nav-item active"><span>⚙️</span> Settings & Rates</a>
+                <button id="logout-btn" class="nav-item" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; margin-top: auto;"><span>🚪</span> Sign Out</button>
+            </nav>
+        </aside>
+
+        <div class="main-content">
+            <header class="top-header">
+                <h2 class="header-title">Club Rates & Configurations</h2>
+                <div class="owner-profile">
+                    <div class="profile-avatar">CD</div>
+                </div>
+            </header>
+
+            <main class="settings-container">
+                <div class="settings-card">
+                    <h3 class="settings-title">Manage Pricing Rates (Rs.)</h3>
+                    <form id="rates-form">
+                        <div class="form-group">
+                            <label class="form-label">Century Rate (Per Minute)</label>
+                            <input type="number" id="rate-century" class="form-input" required min="1">
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">One Ball / Six Ball (Single)</label>
+                                <input type="number" id="rate-oneball-single" class="form-input" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">One Ball / Six Ball (Double)</label>
+                                <input type="number" id="rate-oneball-double" class="form-input" required min="1">
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Full Frame (Single)</label>
+                                <input type="number" id="rate-fullframe-single" class="form-input" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Full Frame (Double)</label>
+                                <input type="number" id="rate-fullframe-double" class="form-input" required min="1">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Save Updated Rates</button>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script type="module" src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const defaultRates = {
+                century: 7,
+                oneballSingle: 100,
+                oneballDouble: 200,
+                fullframeSingle: 150,
+                fullframeDouble: 300
+            };
+
+            const savedRates = JSON.parse(localStorage.getItem('bt_rates') || JSON.stringify(defaultRates));
+
+            document.getElementById('rate-century').value = savedRates.century;
+            document.getElementById('rate-oneball-single').value = savedRates.oneballSingle;
+            document.getElementById('rate-oneball-double').value = savedRates.oneballDouble;
+            document.getElementById('rate-fullframe-single').value = savedRates.fullframeSingle;
+            document.getElementById('rate-fullframe-double').value = savedRates.fullframeDouble;
+
+            document.getElementById('rates-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const updatedRates = {
+                    century: parseFloat(document.getElementById('rate-century').value),
+                    oneballSingle: parseFloat(document.getElementById('rate-oneball-single').value),
+                    oneballDouble: parseFloat(document.getElementById('rate-oneball-double').value),
+                    fullframeSingle: parseFloat(document.getElementById('rate-fullframe-single').value),
+                    fullframeDouble: parseFloat(document.getElementById('rate-fullframe-double').value)
+                };
+
+                localStorage.setItem('bt_rates', JSON.stringify(updatedRates));
+                alert('Pricing rates saved successfully!');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session History - CUEDESK</title>
+
+    <!-- Supabase Module Import -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+        }
+      }
+    </script>
+
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .history-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin: 2rem;
+            box-shadow: var(--shadow-card);
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .history-table th, .history-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .history-table th {
+            color: var(--gold-primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+        .total-badge {
+            background: rgba(212,175,55,0.15);
+            color: var(--gold-light);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-weight: bold;
+        }
+        .clear-btn {
+            background: rgba(231, 111, 81, 0.2);
+            color: #e76f51;
+            border: 1px solid rgba(231, 111, 81, 0.4);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .clear-btn:hover { background: #e76f51; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="brand-title">CUEDESK</h1>
+                <p class="brand-subtitle">Snooker Management</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><span>🎱</span> Tables & Games</a>
+                <a href="history.html" class="nav-item active"><span>📊</span> Session History</a>
+                <a href="settings.html" class="nav-item"><span>⚙️</span> Settings & Rates</a>
+                <button id="logout-btn" class="nav-item" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; margin-top: auto;"><span>🚪</span> Sign Out</button>
+            </nav>
+        </aside>
+
+        <div class="main-content">
+            <header class="top-header">
+                <h2 class="header-title">Session History & Revenue</h2>
+                <div class="owner-profile">
+                    <div class="profile-avatar">CD</div>
+                </div>
+            </header>
+
+            <main>
+                <div class="history-card">
+                    <div class="history-header">
+                        <h3>Today's Ended Sessions</h3>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <span class="total-badge" id="total-revenue">Total Revenue: Rs. 0</span>
+                            <button class="clear-btn" id="clear-history-btn">Clear Local History</button>
+                        </div>
+                    </div>
+
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Table #</th>
+                                <th>Game Type</th>
+                                <th>Format</th>
+                                <th>Duration</th>
+                                <th>Total Bill</th>
+                                <th>Time Ended</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-rows">
+                            <tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Loading sessions...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        async function loadHistory() {
+            const tbody = document.getElementById('history-rows');
+            const totalElem = document.getElementById('total-revenue');
+            let historyData = [];
+            let totalRevenue = 0;
+
+            try {
+                const { data, error } = await supabase.from('game_sessions').select('*').order('created_at', { ascending: false });
+                if (!error && data && data.length > 0) {
+                    historyData = data.map(item => ({
+                        tableId: item.table_id,
+                        gameType: item.game_type,
+                        format: item.game_format || 'N/A',
+                        duration: `${item.duration_minutes} mins`,
+                        bill: parseFloat(item.total_bill),
+                        time: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }));
+                }
+            } catch (e) {
+                console.log('Falling back to local history...');
+            }
+
+            if (historyData.length === 0) {
+                historyData = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
+            }
+
+            if (historyData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No sessions recorded yet today.</td></tr>`;
+                totalElem.textContent = `Total Revenue: Rs. 0`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            historyData.forEach(item => {
+                totalRevenue += item.bill;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>Table ${item.tableId}</strong></td>
+                        <td>${item.gameType}</td>
+                        <td>${item.format}</td>
+                        <td>${item.duration}</td>
+                        <td style="color: var(--gold-primary); font-weight: bold;">Rs. ${item.bill}</td>
+                        <td>${item.time}</td>
+                    </tr>
+                `;
+            });
+
+            totalElem.textContent = `Total Revenue: Rs. ${totalRevenue}`;
+        }
+
+        document.getElementById('clear-history-btn').addEventListener('click', () => {
+            if (confirm('Clear local history backup?')) {
+                localStorage.removeItem('bare_tallies_history');
+                loadHistory();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadHistory);
+    </script>
+</body>
+</html>
