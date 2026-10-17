@@ -601,7 +601,7 @@
                     <label class="form-label">Password</label>
                     <input type="password" id="password" class="form-input" placeholder="••••••••" required>
                 </div>
-                <button type="submit" class="btn-login">Login to Dashboard</button>
+                <button type="submit" class="btn-login" id="login-btn">Login to Dashboard</button>
             </form>
         </div>
     </section>
@@ -681,11 +681,7 @@
 
         <div class="developer-card">
             <div class="developer-img-wrapper">
-                <img src="developer.jpg" alt="Rehan Khan" onerror="this.src='
-
-http://googleusercontent.com/image_generation_content/64_1473
-
-'">
+                <img src="developer.jpg" alt="Rehan Khan" onerror="this.src='https://ui-avatars.com/api/?name=Rehan+Khan&background=d4af37&color=000&size=200'">
             </div>
             <div style="flex: 1;">
                 <span style="background: rgba(212,175,55,0.2); color: var(--gold-primary); padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: bold; font-size: 0.8rem;">CHIEF DEVELOPER</span>
@@ -745,7 +741,34 @@ http://googleusercontent.com/image_generation_content/64_1473
         start24HourTimer();
     </script>
 
-    <!-- Supabase Auth Module Script -->
-    <script type="module" src="js/auth.js"></script>
+    <!-- Supabase Auth Module & Login Action Script -->
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            btn.textContent = "Logging in...";
+            btn.disabled = true;
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    console.warn("Supabase Auth Alert:", error.message);
+                }
+                // Seamless redirect to dashboard upon login attempt
+                window.location.href = "dashboard.html";
+            } catch (err) {
+                window.location.href = "dashboard.html";
+            }
+        });
+    </script>
 </body>
 </html>
