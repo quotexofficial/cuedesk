@@ -146,7 +146,7 @@
                         <h3>Ended Sessions & Revenue</h3>
                         <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                             <span class="total-badge" id="total-revenue">Total Revenue: Rs. 0</span>
-                            <button class="clear-btn" id="clear-history-btn">Clear Local History</button>
+                            <button class="clear-btn" id="clear-history-btn">Clear All History</button>
                         </div>
                     </div>
 
@@ -177,7 +177,6 @@
         import { supabase } from './js/supabase.js';
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Mobile Menu Setup
             const mobileToggle = document.getElementById('mobile-menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -193,7 +192,6 @@
                 });
             }
 
-            // Load Club Name
             let clubName = localStorage.getItem('cuedesk_club_name') || 'Snooker Club';
             try {
                 const { data: { user } } = await supabase.auth.getUser();
@@ -205,7 +203,6 @@
             const initials = clubName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
             document.getElementById('display-club-avatar').textContent = initials || 'SC';
 
-            // Load History Data
             await loadHistory();
         });
 
@@ -215,11 +212,11 @@
             let historyData = [];
             let totalRevenue = 0;
 
-            // Fetch from Supabase
             try {
-                const { data, error } = await import('./js/supabase.js').then(m => m.supabase.from('game_sessions').select('*').order('created_at', { ascending: false }));
+                const { data, error } = await supabase.from('game_sessions').select('*').order('created_at', { ascending: false });
                 if (!error && data && data.length > 0) {
                     historyData = data.map(item => ({
+                        id: item.id,
                         tableId: item.table_id,
                         gameType: item.game_type,
                         format: item.game_format || 'N/A',
@@ -230,7 +227,6 @@
                 }
             } catch (e) {}
 
-            // Fallback / Combined with local storage if cloud is empty
             if (historyData.length === 0) {
                 historyData = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
             }
@@ -259,11 +255,21 @@
             totalElem.textContent = `Total Revenue: Rs. ${totalRevenue}`;
         }
 
-        document.getElementById('clear-history-btn').addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear local history backup?')) {
+        document.getElementById('clear-history-btn').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to clear all session history from cloud and local?')) {
+                // Clear Local Storage
                 localStorage.removeItem('bare_tallies_history');
-                loadHistory(); // Immediate UI re-render
-                alert('Local history cleared successfully!');
+
+                // Clear Supabase Cloud Table Data
+                try {
+                    const { error } = await supabase.from('game_sessions').delete().neq('table_id', 0);
+                    if (error) throw error;
+                } catch (err) {
+                    console.log('Cloud delete note:', err.message);
+                }
+
+                await loadHistory();
+                alert('All history cleared successfully!');
             }
         });
     </script>
