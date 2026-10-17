@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Owner Login - CUEDESK BY REHAN</title>
-
+    <title>CUEDESK - Premium Snooker Club Management System</title>
+    
     <!-- Supabase ES Module Import Map -->
     <script type="importmap">
       {
@@ -15,68 +15,438 @@
     </script>
 
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --bg-dark: #0a0a0c;
+            --bg-card: #121216;
+            --gold-primary: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.3);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f0f0;
+            --text-muted: #a0a0a5;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Top Navigation Header */
+        .landing-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 5%;
+            background: rgba(18, 18, 22, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .brand-logo {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--gold-primary);
+            letter-spacing: 2px;
+            text-decoration: none;
+        }
+        .nav-contact-btn {
+            background: linear-gradient(135deg, var(--gold-primary), #997b1e);
+            color: #000;
+            font-weight: 700;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .nav-contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px var(--gold-glow);
+        }
+
+        /* Hero Section with Dual Layout (Info + Login Box) */
+        .hero-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4rem 5%;
+            gap: 3rem;
+            max-width: 1300px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        .hero-text {
+            flex: 1;
+            min-width: 320px;
+        }
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.2rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--gold-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Login Card */
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+            border-radius: 16px 16px 0 0;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header h3 {
+            font-size: 1.5rem;
+            margin: 0 0 0.5rem 0;
+            color: var(--gold-primary);
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: #0a0a0c;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.3s ease;
+        }
+        .form-input:focus {
+            border-color: var(--gold-primary);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, var(--gold-primary), #997b1e);
+            color: #000;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-login:hover {
+            opacity: 0.95;
+            box-shadow: 0 4px 20px var(--gold-glow);
+        }
+
+        /* Features & Benefits Grid */
+        .features-section {
+            padding: 5rem 5%;
+            background: #0e0e12;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--gold-primary);
+            margin-bottom: 3rem;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: transform 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold-primary);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .feature-card h4 {
+            font-size: 1.25rem;
+            margin: 0 0 0.75rem 0;
+            color: #fff;
+        }
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Screenshots / Preview Section */
+        .preview-section {
+            padding: 5rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2.5rem;
+        }
+        .preview-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .preview-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #181820, #0a0a0c);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Call To Action Banner */
+        .cta-banner {
+            background: linear-gradient(135deg, #181822, #0d0d12);
+            border: 1px solid var(--gold-primary);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            max-width: 1000px;
+            margin: 4rem auto;
+            text-align: center;
+            box-shadow: 0 10px 30px var(--gold-glow);
+        }
+        .cta-banner h2 {
+            font-size: 2rem;
+            color: var(--gold-primary);
+            margin: 0 0 1rem 0;
+        }
+        .cta-banner p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .whatsapp-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #25d366;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 0.85rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .whatsapp-cta-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        }
+
+        /* Floating Animated WhatsApp Widget */
+        .floating-whatsapp {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background-color: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.5);
+            z-index: 999;
+            text-decoration: none;
+            animation: pulse-green 2s infinite;
+        }
+        .floating-whatsapp svg {
+            width: 32px;
+            height: 32px;
+            fill: #fff;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+            70% { box-shadow: 0 0 0 18px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.2rem; }
+            .hero-section { padding: 2rem 5%; }
+            .cta-banner { margin: 2rem 5%; }
+        }
+    </style>
 </head>
-<body class="login-page">
-    <main class="login-container" role="main">
-        <header class="login-header">
-            <h1 class="brand-title">BARE TALLIES</h1>
-            <p class="brand-subtitle">Snooker Club Management</p>
-        </header>
+<body>
 
-        <section class="login-card" aria-labelledby="login-heading">
-            <h2 id="login-heading" class="login-heading">Owner Login</h2>
+    <!-- Header Navigation -->
+    <nav class="landing-nav">
+        <a href="index.html" class="brand-logo">CUEDESK</a>
+        <a href="https://wa.me/923299584548?text=Hi%20Rehan,%20I%20want%20CUEDESK%20software%20for%20my%20Snooker%20Club" target="_blank" class="nav-contact-btn">Get CUEDESK</a>
+    </nav>
 
-            <form id="login-form" class="login-form" novalidate>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-text">
+            <h1 class="hero-title">Smart Management System for Snooker Clubs</h1>
+            <p class="hero-subtitle">Automate table timers, frame rates, daily shift billing, and cloud sales reports. CUEDESK delivers complete operational control for modern club owners.</p>
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <span style="color: var(--gold-primary); font-weight: bold;">✔ Multi-Table Timers</span>
+                <span style="color: var(--gold-primary); font-weight: bold;">✔ Shift PDF Reports</span>
+                <span style="color: var(--gold-primary); font-weight: bold;">✔ Cloud Database</span>
+            </div>
+        </div>
+
+        <!-- Login Card Portal -->
+        <div class="login-card">
+            <div class="login-header">
+                <h3>Admin Portal Login</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Sign in to access your club dashboard</p>
+            </div>
+
+            <form id="login-form">
                 <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        class="form-input" 
-                        required 
-                        autocomplete="email" 
-                        placeholder="owner@example.com"
-                    >
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="admin@cuedesk.com" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <div class="password-wrapper">
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            class="form-input" 
-                            required 
-                            autocomplete="current-password" 
-                            placeholder="Enter your password"
-                        >
-                        <button 
-                            type="button" 
-                            id="password-toggle" 
-                            class="password-toggle-btn" 
-                            aria-label="Show password"
-                        >
-                            Show
-                        </button>
-                    </div>
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
                 </div>
-
-                <div id="error-message" class="error-message" role="alert" aria-live="polite" hidden></div>
-
-                <button type="submit" id="submit-btn" class="btn btn-primary">
-                    <span class="btn-text">Sign In</span>
-                    <span id="loading-indicator" class="loading-spinner" hidden aria-hidden="true"></span>
-                </button>
+                <button type="submit" class="btn-login">Login to Dashboard</button>
             </form>
-        </section>
+        </div>
+    </section>
 
-        <footer class="login-footer">
-            <p>&copy; BARE TALLIES. All rights reserved.</p>
-        </footer>
-    </main>
+    <!-- Key Benefits Section -->
+    <section class="features-section">
+        <h2 class="section-title">Why Choose CUEDESK?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎱</div>
+                <h4>Dynamic Table Controls</h4>
+                <p>Add or remove up to 20 snooker tables with live playing status indicators and persistent session timers.</p>
+            </div>
 
+            <div class="feature-card">
+                <div class="feature-icon">⏱️</div>
+                <h4>Automated Rate Billing</h4>
+                <p>Support for One Ball, Six Ball, Full Frame, and Century time-based rates for Single and Double players.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h4>Shift PDF Sales Reports</h4>
+                <p>Open and Close Snooker Club shifts with 1-click automatic PDF sales receipt generation for complete revenue transparency.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">☁️</div>
+                <h4>Supabase Cloud Storage</h4>
+                <p>Never lose session records! All game data is synchronized safely between local storage and cloud database.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Screenshots Preview Section -->
+    <section class="preview-section">
+        <h2 class="section-title">Software Interface Preview</h2>
+        <div class="preview-grid">
+            <div class="preview-box">
+                <div class="preview-placeholder">
+                    <span>🎱 Live Tables Dashboard Preview</span>
+                </div>
+                <h4 style="margin: 0.5rem 0; color: var(--gold-primary);">Interactive Dashboard</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Real-time status overview of all tables.</p>
+            </div>
+
+            <div class="preview-box">
+                <div class="preview-placeholder">
+                    <span>📊 Date-Wise Session History</span>
+                </div>
+                <h4 style="margin: 0.5rem 0; color: var(--gold-primary);">Sales & History Reports</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Filter daily sales with date separators.</p>
+            </div>
+
+            <div class="preview-box">
+                <div class="preview-placeholder">
+                    <span>⚙️ Custom Rates & Settings</span>
+                </div>
+                <h4 style="margin: 0.5rem 0; color: var(--gold-primary);">Customizable Rates</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Easily adjust prices for frames and time.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Commercial Banner -->
+    <div class="cta-banner">
+        <h2>Want CUEDESK for Your Snooker Club Business?</h2>
+        <p>Get full setup, customized domain, and dedicated admin credentials for your club today!</p>
+        <a href="https://wa.me/923299584548?text=Hi%20Rehan,%20I%20want%20CUEDESK%20software%20for%20my%20Snooker%20Club" target="_blank" class="whatsapp-cta-btn">
+            💬 Contact on WhatsApp (+92 329 9584548)
+        </a>
+    </div>
+
+    <!-- Animated Floating WhatsApp Action Button -->
+    <a href="https://wa.me/923299584548?text=Hi%20Rehan,%20I%20want%20CUEDESK%20software%20for%20my%20Snooker%20Club" target="_blank" class="floating-whatsapp" title="Chat on WhatsApp">
+        <svg viewBox="0 0 32 32">
+            <path d="M16 2a13 13 0 0 0-11 19.8L3 29l7.3-1.9A13 13 0 1 0 16 2zm0 23.8a10.8 10.8 0 0 1-5.5-1.5l-.4-.2-4.1 1.1 1.1-4-.3-.4A10.8 10.8 0 1 1 16 25.8zm5.9-8.1c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a9 9 0 0 1-2.6-1.6 9.9 9.9 0 0 1-1.8-2.3c-.2-.3 0-.5.1-.6s.3-.4.5-.6l.3-.4c.1-.2 0-.4 0-.5s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.9 1.2 3.4 1.4 3.6 2.4 3.7 5.8 5.2c.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.7-.1 2.1-.9 2.4-1.7s.3-1.5.2-1.7c-.1-.1-.4-.2-.7-.4z"/>
+        </svg>
+    </a>
+
+    <!-- Supabase Auth Module Integration -->
     <script type="module" src="js/auth.js"></script>
 </body>
 </html>
