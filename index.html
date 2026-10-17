@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CUEDESK - Ultimate Snooker Club Management System</title>
     
+    <!-- Supabase ES Module Import Map -->
     <script type="importmap">
       {
         "imports": {
@@ -19,10 +20,13 @@
             --bg-dark: #08080a;
             --bg-card: #111116;
             --gold-primary: #d4af37;
+            --gold-light: #f3e5ab;
             --gold-glow: rgba(212, 175, 55, 0.25);
             --border-color: rgba(255, 255, 255, 0.09);
             --text-main: #f5f5f7;
             --text-muted: #a1a1aa;
+            --green-glow: rgba(42, 157, 143, 0.4);
+            --accent-red: #e76f51;
         }
 
         body {
@@ -35,6 +39,41 @@
             line-height: 1.5;
         }
 
+        /* Top Limited Time Offer Bar */
+        .top-promo-bar {
+            background: linear-gradient(90deg, #b83214, #d4af37, #b83214);
+            background-size: 200% 200%;
+            animation: gradientMove 4s ease infinite;
+            color: #000;
+            font-weight: 800;
+            text-align: center;
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .countdown-timer-box {
+            background: rgba(0, 0, 0, 0.85);
+            color: var(--gold-primary);
+            padding: 0.2rem 0.75rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            border: 1px solid var(--gold-primary);
+        }
+
+        /* Navigation Header */
         .landing-nav {
             display: flex;
             justify-content: space-between;
@@ -53,6 +92,9 @@
             color: var(--gold-primary);
             letter-spacing: 2px;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         .nav-contact-btn {
             background: linear-gradient(135deg, var(--gold-primary), #a3821a);
@@ -61,8 +103,45 @@
             padding: 0.65rem 1.4rem;
             border-radius: 8px;
             text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--gold-glow);
+        }
+        .nav-contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
         }
 
+        /* Continuous Ticker / Moving Bar */
+        .ticker-wrapper {
+            width: 100%;
+            background: #0f0f14;
+            border-bottom: 1px solid var(--border-color);
+            overflow: hidden;
+            white-space: nowrap;
+            box-sizing: border-box;
+            padding: 0.75rem 0;
+        }
+        .ticker-content {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: ticker 30s linear infinite;
+        }
+        .ticker-item {
+            display: inline-block;
+            padding: 0 2rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--gold-primary);
+        }
+        .ticker-item span { color: #fff; font-weight: 400; }
+
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        /* Hero Section */
         .hero-section {
             display: flex;
             align-items: center;
@@ -73,7 +152,23 @@
             margin: 0 auto;
             flex-wrap: wrap;
         }
-        .hero-text { flex: 1.2; min-width: 320px; }
+        .hero-text {
+            flex: 1.2;
+            min-width: 320px;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.12);
+            color: var(--gold-primary);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
         .hero-title {
             font-size: 3.2rem;
             font-weight: 900;
@@ -82,6 +177,235 @@
             background: linear-gradient(135deg, #ffffff 30%, var(--gold-primary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Vector Snooker Table Graphic */
+        .hero-table-graphic {
+            width: 100%;
+            height: 180px;
+            background: radial-gradient(circle at center, #0f6e3e 0%, #084223 70%, #032111 100%);
+            border: 12px solid #4a2e18;
+            border-radius: 12px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.9), 0 10px 25px rgba(0,0,0,0.6);
+            position: relative;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .pocket {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: #0b0b0b;
+            border-radius: 50%;
+            border: 2px solid #2a1a0f;
+        }
+        .p-tl { top: 3px; left: 3px; }
+        .p-tr { top: 3px; right: 3px; }
+        .p-bl { bottom: 3px; left: 3px; }
+        .p-br { bottom: 3px; right: 3px; }
+        .p-tm { top: 3px; left: 50%; transform: translateX(-50%); }
+        .p-bm { bottom: 3px; left: 50%; transform: translateX(-50%); }
+
+        .baulk-line {
+            position: absolute;
+            left: 25%;
+            top: 5%;
+            bottom: 5%;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .baulk-arc {
+            position: absolute;
+            left: 25%;
+            top: 32%;
+            width: 40px;
+            height: 65px;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-left: none;
+            border-radius: 0 60px 60px 0;
+        }
+        .table-balls-display {
+            position: absolute;
+            right: 25%;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .ball-w { width: 14px; height: 14px; background: #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.7); }
+        .ball-r { width: 14px; height: 14px; background: #cc2929; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.7); }
+
+        /* Login Card */
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+            border-radius: 18px 18px 0 0;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header h3 {
+            font-size: 1.6rem;
+            margin: 0 0 0.5rem 0;
+            color: var(--gold-primary);
+            font-weight: 800;
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: #08080a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.3s ease;
+        }
+        .form-input:focus { border-color: var(--gold-primary); }
+        .btn-login {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, var(--gold-primary), #a3821a);
+            color: #000;
+            font-weight: 800;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-login:hover {
+            opacity: 0.95;
+            box-shadow: 0 5px 20px var(--gold-glow);
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 5rem 6%;
+            background: #0c0c10;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .section-title {
+            text-align: center;
+            font-size: 2.3rem;
+            font-weight: 800;
+            color: var(--gold-primary);
+            margin-bottom: 3rem;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--gold-primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .feature-card h4 {
+            font-size: 1.3rem;
+            margin: 0 0 0.75rem 0;
+            color: #fff;
+            font-weight: 700;
+        }
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Mockup Previews */
+        .preview-section {
+            padding: 5rem 6%;
+            max-width: 1250px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2.5rem;
+        }
+        .preview-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.5rem;
+            text-align: left;
+        }
+        .preview-mockup {
+            width: 100%;
+            height: 180px;
+            background: #08080a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            gap: 0.5rem;
+        }
+        .mock-badge {
+            background: rgba(42, 157, 143, 0.2);
+            color: #2a9d8f;
+            border: 1px solid rgba(42, 157, 143, 0.4);
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
 
         /* Developer Info Section */
@@ -121,71 +445,230 @@
             object-position: top center;
         }
 
-        .login-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        /* Commercial CTA Banner */
+        .cta-banner {
+            background: linear-gradient(135deg, #161620, #0a0a0e);
+            border: 1px solid var(--gold-primary);
+            border-radius: 20px;
+            padding: 3.5rem 2rem;
+            max-width: 1050px;
+            margin: 5rem auto;
+            text-align: center;
+            box-shadow: 0 12px 40px var(--gold-glow);
         }
-        .form-group { margin-bottom: 1.25rem; }
-        .form-input {
-            width: 100%; padding: 0.85rem 1rem;
-            background: #08080a; border: 1px solid var(--border-color);
-            border-radius: 8px; color: #fff; font-size: 1rem; box-sizing: border-box;
+        .cta-banner h2 {
+            font-size: 2.2rem;
+            color: var(--gold-primary);
+            margin: 0 0 1rem 0;
+            font-weight: 800;
         }
-        .btn-login {
-            width: 100%; padding: 0.9rem;
-            background: linear-gradient(135deg, var(--gold-primary), #a3821a);
-            color: #000; font-weight: 800; font-size: 1rem; border: none; border-radius: 8px; cursor: pointer;
+        .cta-banner p {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            margin-bottom: 2rem;
+        }
+        .whatsapp-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #25d366;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.15rem;
+            padding: 0.9rem 2.2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .whatsapp-cta-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.45);
         }
 
+        /* Animated Floating WhatsApp Button */
         .floating-whatsapp {
-            position: fixed; bottom: 25px; right: 25px;
-            width: 60px; height: 60px; background-color: #25d366;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 18px rgba(37, 211, 102, 0.5); z-index: 999; text-decoration: none;
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 62px;
+            height: 62px;
+            background-color: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 18px rgba(37, 211, 102, 0.5);
+            z-index: 999;
+            text-decoration: none;
             animation: pulse-green 2s infinite;
         }
-        .floating-whatsapp svg { width: 34px; height: 34px; fill: #fff; }
+        .floating-whatsapp svg {
+            width: 34px;
+            height: 34px;
+            fill: #fff;
+        }
 
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
-            70% { box-shadow: 0 0 0 18px rgba(37, 211, 102, 0); }
+            70% { box-shadow: 0 0 0 20px rgba(37, 211, 102, 0); }
             100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.3rem; }
+            .hero-section { padding: 2.5rem 5%; }
+            .cta-banner { margin: 2rem 5%; padding: 2rem 1rem; }
+            .top-promo-bar { flex-direction: column; gap: 0.5rem; }
         }
     </style>
 </head>
 <body>
 
+    <!-- Promo Discount Bar with Auto-Reset 24H Countdown -->
+    <div class="top-promo-bar">
+        <span>🔥 GET CUEDESK TOOL TODAY AT 50% SPECIAL DISCOUNT!</span>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>Offer Ends In:</span>
+            <div class="countdown-timer-box" id="promo-countdown">23:59:59</div>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
     <nav class="landing-nav">
         <a href="index.html" class="brand-logo">🎱 CUEDESK</a>
-        <a href="https://wa.me/923299584548?text=Hi%20Rehan,%20I%20want%20CUEDESK%20software%20for%20my%20Snooker%20Club" target="_blank" class="nav-contact-btn">Get CUEDESK Tool</a>
+        <a href="https://wa.me/923299584548?text=Hi%20Rehan,%20I%20want%20CUEDESK%20software%20for%20my%20Snooker%20Club" target="_blank" class="nav-contact-btn">Get CUEDESK Tool (50% Off)</a>
     </nav>
 
+    <!-- Infinite Moving Ticker / Social Proof Bar -->
+    <div class="ticker-wrapper">
+        <div class="ticker-content">
+            <div class="ticker-item">⭐ TRUSTED BY 100+ SNOOKER CLUB OWNERS</div>
+            <div class="ticker-item">🎱 <span>Used in Golden Cue Snooker Club</span></div>
+            <div class="ticker-item">🏆 <span>Used in Break 'N' Run Club</span></div>
+            <div class="ticker-item">👑 <span>Used in Royal Snooker Hub</span></div>
+            <div class="ticker-item">⚡ <span>Used in Dash Snooker Club</span></div>
+            <div class="ticker-item">⭐ TRUSTED BY 100+ SNOOKER CLUB OWNERS</div>
+            <div class="ticker-item">🎱 <span>Used in Golden Cue Snooker Club</span></div>
+            <div class="ticker-item">🏆 <span>Used in Break 'N' Run Club</span></div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-text">
+            <span class="hero-badge">⚡ Professional Snooker Club Management</span>
             <h1 class="hero-title">Automate Snooker Tables, Frames & Daily Sales</h1>
-            <p style="color: var(--text-muted); font-size: 1.15rem;">CUEDESK delivers 100% real-time operational management. Manage table dynamic timers, cash/online transaction receipts, and instant shift PDF reports.</p>
+            
+            <!-- Dynamic Vector Graphic Snooker Table -->
+            <div class="hero-table-graphic">
+                <div class="pocket p-tl"></div>
+                <div class="pocket p-tr"></div>
+                <div class="pocket p-bl"></div>
+                <div class="pocket p-br"></div>
+                <div class="pocket p-tm"></div>
+                <div class="pocket p-bm"></div>
+                <div class="baulk-line"></div>
+                <div class="baulk-arc"></div>
+                <div class="table-balls-display">
+                    <div class="ball-w"></div>
+                    <div class="ball-r"></div>
+                    <div class="ball-r"></div>
+                </div>
+            </div>
+
+            <p class="hero-subtitle">CUEDESK delivers 100% real-time operational management. Manage table addition/removal, live timers, customizable game rates, cash/online payments with receipt attachments, and instant shift PDF reports.</p>
+            
+            <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+                <span style="color: var(--gold-primary); font-weight: bold;">✔ Dynamic Table Count</span>
+                <span style="color: var(--gold-primary); font-weight: bold;">✔ Shift PDF Invoices</span>
+                <span style="color: var(--gold-primary); font-weight: bold;">✔ Supabase Cloud Sync</span>
+            </div>
         </div>
 
+        <!-- Login Portal Card -->
         <div class="login-card">
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <h3 style="color: var(--gold-primary); margin: 0;">Admin Portal Login</h3>
+            <div class="login-header">
+                <h3>Admin Portal Login</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Access your club dashboard & timers</p>
             </div>
+
             <form id="login-form">
                 <div class="form-group">
-                    <label style="color: var(--text-muted); font-size: 0.85rem;">Email</label>
+                    <label class="form-label">Admin Email</label>
                     <input type="email" id="email" class="form-input" placeholder="owner@cuedesk.com" required>
                 </div>
                 <div class="form-group">
-                    <label style="color: var(--text-muted); font-size: 0.85rem;">Password</label>
+                    <label class="form-label">Password</label>
                     <input type="password" id="password" class="form-input" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="btn-login">Login to Dashboard</button>
             </form>
+        </div>
+    </section>
+
+    <!-- Key Features & Benefits Section -->
+    <section class="features-section">
+        <h2 class="section-title">Built for High Performance Snooker Clubs</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎱</div>
+                <h4>Dynamic Tables (1 to 20)</h4>
+                <p>Add or remove tables in seconds. Live overview status cards show playing and available tables with active timers.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⏱️</div>
+                <h4>Automated Rate Billing</h4>
+                <p>Supports One Ball, Six Ball, Full Frame, and Century time-based calculations for Single and Double players instantly.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💳</div>
+                <h4>Bifurcated Payments & Slips</h4>
+                <p>Separate Cash vs. Online (EasyPaisa/JazzCash) transactions with image receipt uploads directly linked to sessions.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h4>Open/Close Shift PDF Reports</h4>
+                <p>Click "Open Snooker" at start of day and "Close Snooker" at shift end to automatically download a clean PDF sales summary.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Screenshots / Visual Previews -->
+    <section class="preview-section">
+        <h2 class="section-title">Software Interface Highlights</h2>
+        <div class="preview-grid">
+            <div class="preview-box">
+                <div class="preview-mockup">
+                    <span style="font-size: 2rem;">🎱</span>
+                    <span class="mock-badge">Table Live Indicators</span>
+                    <span style="color: var(--gold-primary); font-size: 0.85rem;">00:24:15 Timer Running</span>
+                </div>
+                <h4 style="margin: 0.75rem 0 0.25rem 0; color: var(--gold-primary);">Real-Time Table Timers</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Live tracking with automatic bill calculation on game end.</p>
+            </div>
+
+            <div class="preview-box">
+                <div class="preview-mockup">
+                    <span style="font-size: 2rem;">📊</span>
+                    <span class="mock-badge" style="background: rgba(212, 175, 55, 0.2); color: var(--gold-primary); border-color: rgba(212, 175, 55, 0.4);">Date-Wise Sales Separators</span>
+                    <span style="color: #fff; font-size: 0.85rem;">📅 Total Revenue: Rs. 14,500</span>
+                </div>
+                <h4 style="margin: 0.75rem 0 0.25rem 0; color: var(--gold-primary);">Date Filtered History</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Filter daily sales for any month or date in 1 click.</p>
+            </div>
+
+            <div class="preview-box">
+                <div class="preview-mockup">
+                    <span style="font-size: 2rem;">🧾</span>
+                    <span class="mock-badge" style="background: rgba(231, 111, 81, 0.2); color: #e76f51; border-color: rgba(231, 111, 81, 0.4);">Automatic PDF Generator</span>
+                    <span style="color: #fff; font-size: 0.85rem;">Shift Sales Summary Printable</span>
+                </div>
+                <h4 style="margin: 0.75rem 0 0.25rem 0; color: var(--gold-primary);">PDF Sales Receipts</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Generate shift close reports with complete branding.</p>
+            </div>
         </div>
     </section>
 
@@ -198,7 +681,11 @@
 
         <div class="developer-card">
             <div class="developer-img-wrapper">
-                <img src="developer.jpg" alt="Rehan Khan" onerror="this.src='https://ui-avatars.com/api/?name=Rehan+Khan&background=d4af37&color=000&size=200'">
+                <img src="developer.jpg" alt="Rehan Khan" onerror="this.src='
+
+http://googleusercontent.com/image_generation_content/64_1473
+
+'">
             </div>
             <div style="flex: 1;">
                 <span style="background: rgba(212,175,55,0.2); color: var(--gold-primary); padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: bold; font-size: 0.8rem;">CHIEF DEVELOPER</span>
@@ -213,12 +700,52 @@
         </div>
     </section>
 
+    <!-- Commercial CTA Banner -->
+    <div class="cta-banner">
+        <h2>Want CUEDESK for Your Snooker Club Business?</h2>
+        <p>Get custom domain setup, admin credentials, and 24/7 support for your snooker club!</p>
+        <a href="https://wa.me/923299584548?text=Hi%20Rehan,%20I%20want%20CUEDESK%20software%20for%20my%20Snooker%20Club" target="_blank" class="whatsapp-cta-btn">
+            💬 Contact Rehan on WhatsApp (+92 329 9584548)
+        </a>
+    </div>
+
+    <!-- Animated Floating WhatsApp Button -->
     <a href="https://wa.me/923299584548?text=Hi%20Rehan,%20I%20want%20CUEDESK%20software%20for%20my%20Snooker%20Club" target="_blank" class="floating-whatsapp" title="Chat on WhatsApp">
         <svg viewBox="0 0 32 32">
             <path d="M16 2a13 13 0 0 0-11 19.8L3 29l7.3-1.9A13 13 0 1 0 16 2zm0 23.8a10.8 10.8 0 0 1-5.5-1.5l-.4-.2-4.1 1.1 1.1-4-.3-.4A10.8 10.8 0 1 1 16 25.8zm5.9-8.1c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a9 9 0 0 1-2.6-1.6 9.9 9.9 0 0 1-1.8-2.3c-.2-.3 0-.5.1-.6s.3-.4.5-.6l.3-.4c.1-.2 0-.4 0-.5s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.9 1.2 3.4 1.4 3.6 2.4 3.7 5.8 5.2c.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.7-.1 2.1-.9 2.4-1.7s.3-1.5.2-1.7c-.1-.1-.4-.2-.7-.4z"/>
         </svg>
     </a>
 
+    <!-- Countdown Timer Script -->
+    <script>
+        function start24HourTimer() {
+            const display = document.getElementById('promo-countdown');
+            let endTime = localStorage.getItem('cuedesk_promo_end');
+            
+            if (!endTime || Date.now() > parseInt(endTime)) {
+                endTime = Date.now() + (24 * 60 * 60 * 1000);
+                localStorage.setItem('cuedesk_promo_end', endTime.toString());
+            }
+
+            setInterval(() => {
+                let diff = parseInt(endTime) - Date.now();
+                if (diff <= 0) {
+                    endTime = Date.now() + (24 * 60 * 60 * 1000);
+                    localStorage.setItem('cuedesk_promo_end', endTime.toString());
+                    diff = 24 * 60 * 60 * 1000;
+                }
+
+                const hrs = Math.floor(diff / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+                display.textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }, 1000);
+        }
+        start24HourTimer();
+    </script>
+
+    <!-- Supabase Auth Module Script -->
     <script type="module" src="js/auth.js"></script>
 </body>
 </html>
