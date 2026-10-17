@@ -325,7 +325,7 @@
             color: var(--text-muted);
             text-transform: uppercase;
         }
-        .form-select {
+        .form-select, .form-input-file {
             width: 100%;
             padding: 0.75rem;
             background-color: #121212;
@@ -333,6 +333,7 @@
             border-radius: var(--radius-md);
             color: var(--text-main);
             font-size: 1rem;
+            box-sizing: border-box;
         }
 
         .mobile-menu-toggle {
@@ -513,7 +514,7 @@
             <form id="game-form">
                 <input type="hidden" id="active-table-id">
                 
-                <div class="form-group">
+                <div class="form-group" id="game-type-group">
                     <label class="form-label">Select Game Type</label>
                     <select id="game-type" class="form-select" required>
                         <option value="one-ball">One Ball</option>
@@ -529,6 +530,20 @@
                         <option value="single">Single</option>
                         <option value="double">Double</option>
                     </select>
+                </div>
+
+                <!-- Payment Selection Fields (Shows when Ending Game) -->
+                <div class="form-group" id="payment-mode-group" style="display: none;">
+                    <label class="form-label">Payment Mode</label>
+                    <select id="payment-mode-select" class="form-select">
+                        <option value="CASH">💵 Cash Payment</option>
+                        <option value="ONLINE">💳 Online (EasyPaisa / JazzCash / Bank)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="slip-upload-group" style="display: none;">
+                    <label class="form-label">Upload Online Transaction Receipt / Slip</label>
+                    <input type="file" id="slip-file-input" class="form-input-file" accept="image/*">
                 </div>
 
                 <div id="price-preview" style="background: rgba(212,175,55,0.08); padding: 0.75rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--gold-light);">
@@ -581,6 +596,10 @@
             const gameTypeSelect = document.getElementById('game-type');
             const formatGroup = document.getElementById('format-group');
             const formatSelect = document.getElementById('game-format');
+            const paymentModeGroup = document.getElementById('payment-mode-group');
+            const paymentModeSelect = document.getElementById('payment-mode-select');
+            const slipUploadGroup = document.getElementById('slip-upload-group');
+            const slipFileInput = document.getElementById('slip-file-input');
             const pricePreview = document.getElementById('price-preview');
             const activeTableInput = document.getElementById('active-table-id');
             const modalTableTitle = document.getElementById('modal-table-title');
@@ -589,7 +608,16 @@
             const tablesContainer = document.getElementById('tables-container');
             const indicatorsContainer = document.getElementById('indicators-container');
 
-            // --- SHIFT OPEN / CLOSE SYSTEM ---
+            // Payment Mode Dropdown Toggle listener
+            paymentModeSelect.addEventListener('change', () => {
+                if (paymentModeSelect.value === 'ONLINE') {
+                    slipUploadGroup.style.display = 'block';
+                } else {
+                    slipUploadGroup.style.display = 'none';
+                }
+            });
+
+            // SHIFT OPEN / CLOSE SYSTEM
             const shiftBadge = document.getElementById('shift-badge-status');
             const shiftTimeLabel = document.getElementById('shift-time-label');
             const shiftStartText = document.getElementById('shift-start-time-text');
@@ -618,7 +646,6 @@
                 const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
 
                 if (!activeShift || !activeShift.isOpen) {
-                    // OPEN CLUB
                     const newShift = {
                         isOpen: true,
                         startTime: Date.now()
@@ -627,7 +654,6 @@
                     updateShiftUI();
                     alert('Snooker Club is now OPEN! Fresh shift sales tracking started.');
                 } else {
-                    // CLOSE CLUB & GENERATE PDF
                     const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
                     if (Object.keys(activeSessions).length > 0) {
                         alert('Warning: Some tables are currently active playing! Please end all active games before closing the shift.');
@@ -644,7 +670,6 @@
                 const endTime = Date.now();
                 const clubName = localStorage.getItem('cuedesk_club_name') || 'CUEDESK SNOOKER CLUB';
                 
-                // Get all game sessions recorded during this shift
                 const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
                 const shiftSessions = localHistory.filter(s => {
                     const sessionTime = s.timestamp ? new Date(s.timestamp).getTime() : Date.now();
@@ -676,7 +701,6 @@
                 document.getElementById('pdf-shift-dates').textContent = `Shift: ${new Date(startTime).toLocaleString()} - ${new Date(endTime).toLocaleString()}`;
                 document.getElementById('pdf-total-revenue').textContent = `Total Shift Revenue: Rs. ${shiftTotal}`;
 
-                // Save report to history list
                 const savedReports = JSON.parse(localStorage.getItem('cuedesk_saved_reports') || '[]');
                 savedReports.unshift({
                     date: new Date().toLocaleDateString(),
@@ -687,11 +711,9 @@
                 });
                 localStorage.setItem('cuedesk_saved_reports', JSON.stringify(savedReports));
 
-                // Clear shift status
                 localStorage.removeItem('cuedesk_active_shift');
                 updateShiftUI();
 
-                // Trigger Print PDF
                 const printDiv = document.getElementById('printable-sales-report');
                 printDiv.style.display = 'block';
                 window.print();
@@ -708,7 +730,7 @@
                 }
 
                 listContainer.innerHTML = '';
-                saved.forEach((rep, index) => {
+                saved.forEach((rep) => {
                     listContainer.innerHTML += `
                         <div class="report-item">
                             <div style="font-weight: bold; color: var(--gold-primary);">📅 ${rep.date} Shift</div>
@@ -909,11 +931,17 @@
                 const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
                 
                 if (activeSessions[tableId]) {
-                    modalActionBtn.textContent = 'End Game & Save Bill';
+                    modalActionBtn.textContent = 'End Game & Process Payment';
                     modalActionBtn.style.background = '#e76f51';
+                    paymentModeGroup.style.display = 'block';
+                    if (paymentModeSelect.value === 'ONLINE') {
+                        slipUploadGroup.style.display = 'block';
+                    }
                 } else {
                     modalActionBtn.textContent = 'Start Game';
                     modalActionBtn.style.background = 'linear-gradient(135deg, var(--gold-primary), var(--gold-dark))';
+                    paymentModeGroup.style.display = 'none';
+                    slipUploadGroup.style.display = 'none';
                 }
                 updateFormatOptions();
                 modal.classList.add('active');
@@ -943,6 +971,15 @@
                 }
             }
 
+            function convertBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
+            }
+
             document.getElementById('game-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const tableId = activeTableInput.value;
@@ -967,6 +1004,16 @@
                         bill = session.format === 'single' ? rates.oneballSingle : rates.oneballDouble;
                     }
 
+                    // Convert uploaded slip image to Base64 if Online
+                    let slipBase64 = null;
+                    if (paymentModeSelect.value === 'ONLINE' && slipFileInput.files[0]) {
+                        try {
+                            slipBase64 = await convertBase64(slipFileInput.files[0]);
+                        } catch (err) {
+                            console.error('File conversion error', err);
+                        }
+                    }
+
                     const sessionPayload = {
                         table_id: parseInt(tableId),
                         game_type: String(session.gameType).toUpperCase(),
@@ -983,6 +1030,8 @@
                         format: sessionPayload.game_format,
                         duration: `${durationMins} mins`,
                         bill,
+                        paymentMode: paymentModeSelect.value,
+                        slipImage: slipBase64,
                         timestamp: now.toISOString(),
                         time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     });
@@ -991,10 +1040,10 @@
                     try {
                         const { error } = await supabase.from('game_sessions').insert([sessionPayload]);
                         if (error) throw error;
-                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\nSaved to Cloud Database successfully!`);
+                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\nPayment Mode: ${paymentModeSelect.value}\nSaved to Cloud Database successfully!`);
                     } catch (err) {
                         console.error('Database Save Error:', err.message);
-                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\n(Saved to Local Session History)`);
+                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\nPayment Mode: ${paymentModeSelect.value}\n(Saved to Local Session History)`);
                     }
 
                     delete activeSessions[tableId];
