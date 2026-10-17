@@ -16,6 +16,86 @@
 
     <link rel="stylesheet" href="css/style.css">
     <style>
+        /* Futuristic Live Smart Revenue & Expense Bar Styles */
+        .smart-revenue-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(17, 17, 22, 0.95), rgba(8, 8, 10, 0.98));
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+            border-radius: var(--radius-lg);
+            padding: 1.2rem 2rem;
+            margin: 1.5rem 2rem 0 2rem;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 900;
+            font-family: monospace;
+        }
+
+        .stat-game { color: #2a9d8f; text-shadow: 0 0 10px rgba(42, 157, 143, 0.5); }
+        .stat-canteen { color: #e76f51; text-shadow: 0 0 10px rgba(231, 111, 81, 0.5); }
+        .stat-profit { color: #d4af37; text-shadow: 0 0 12px rgba(212, 175, 55, 0.7); }
+
+        /* Dynamic Neon Glow Table Cards Styling */
+        .snooker-table-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.4s ease;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* 1. Free Table Status - Green Glow Ring */
+        .snooker-table-card.status-free {
+            border: 2px solid #2a9d8f;
+            box-shadow: 0 0 15px rgba(42, 157, 143, 0.4), inset 0 0 10px rgba(42, 157, 143, 0.15);
+        }
+
+        /* 2. Active Game Status - Red Pulse Ring */
+        .snooker-table-card.status-active {
+            border: 2px solid #e63946;
+            animation: neonRedPulse 1.8s infinite alternate;
+        }
+
+        @keyframes neonRedPulse {
+            0% { box-shadow: 0 0 10px rgba(230, 57, 70, 0.4), inset 0 0 8px rgba(230, 57, 70, 0.15); }
+            100% { box-shadow: 0 0 25px rgba(230, 57, 70, 0.8), inset 0 0 18px rgba(230, 57, 70, 0.35); }
+        }
+
+        /* 3. Ending Soon (Last Mins) - Gold Warning Glow */
+        .snooker-table-card.status-ending {
+            border: 2px solid #d4af37;
+            animation: neonGoldGlow 1.2s infinite alternate;
+        }
+
+        @keyframes neonGoldGlow {
+            0% { box-shadow: 0 0 12px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.2); }
+            100% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.95), inset 0 0 20px rgba(212, 175, 55, 0.45); }
+        }
+
         .shift-status-panel {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -176,9 +256,9 @@
 
         .snooker-table-visual {
             width: 100%;
-            height: 160px;
+            height: 140px;
             background: radial-gradient(circle at center, #0f6e3e 0%, #084223 70%, #032111 100%);
-            border: 10px solid #4a2e18;
+            border: 8px solid #4a2e18;
             border-radius: 8px;
             box-shadow: inset 0 0 25px rgba(0,0,0,0.85), 0 6px 16px rgba(0,0,0,0.5);
             position: relative;
@@ -186,11 +266,12 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            margin: 1rem 0;
         }
         .pocket {
             position: absolute;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             background-color: #0b0b0b;
             border-radius: 50%;
             border: 2px solid #2a1a0f;
@@ -214,11 +295,11 @@
             position: absolute;
             left: 28%;
             top: 32%;
-            width: 35px;
-            height: 55px;
+            width: 30px;
+            height: 45px;
             border: 2px solid rgba(255, 255, 255, 0.25);
             border-left: none;
-            border-radius: 0 50px 50px 0;
+            border-radius: 0 40px 40px 0;
         }
 
         .table-balls {
@@ -229,18 +310,42 @@
             gap: 4px;
         }
         .ball-white {
-            width: 13px;
-            height: 13px;
+            width: 12px;
+            height: 12px;
             background: #ffffff;
             border-radius: 50%;
             box-shadow: 0 2px 5px rgba(0,0,0,0.6);
         }
         .ball-red {
-            width: 13px;
-            height: 13px;
+            width: 12px;
+            height: 12px;
             background: #cc2929;
             border-radius: 50%;
             box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+        }
+
+        .table-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-name { margin: 0; font-size: 1.1rem; color: #fff; }
+        .badge { padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .badge-available { background: rgba(42, 157, 143, 0.2); color: #2a9d8f; border: 1px solid #2a9d8f; }
+        .badge-playing { background: rgba(230, 57, 70, 0.2); color: #e63946; border: 1px solid #e63946; }
+        .badge-ending { background: rgba(212, 175, 55, 0.2); color: #d4af37; border: 1px solid #d4af37; }
+
+        .card-footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .timer-display {
+            font-size: 1.6rem;
+            font-family: monospace;
+            text-align: center;
+            font-weight: bold;
+            color: var(--gold-primary);
         }
 
         /* Shift Reports History Panel / Drawer */
@@ -371,7 +476,7 @@
                 background-color: var(--bg-card);
             }
             .sidebar.active { left: 0; }
-            .shift-status-panel, .status-overview-panel {
+            .shift-status-panel, .status-overview-panel, .smart-revenue-bar {
                 margin: 1rem 1rem 0 1rem;
                 padding: 1rem;
             }
@@ -428,6 +533,24 @@
                 </div>
             </header>
 
+            <!-- LIVE SMART REVENUE & EXPENSE BAR -->
+            <div class="smart-revenue-bar">
+                <div class="stat-item">
+                    <span class="stat-label">🎮 Today's Game Income</span>
+                    <span class="stat-value stat-game" id="game-income-display">Rs. 0</span>
+                </div>
+                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
+                <div class="stat-item">
+                    <span class="stat-label">☕ Canteen Sales</span>
+                    <span class="stat-value stat-canteen" id="canteen-income-display">Rs. 0</span>
+                </div>
+                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
+                <div class="stat-item">
+                    <span class="stat-label">💰 Net Shift Profit</span>
+                    <span class="stat-value stat-profit" id="net-profit-display">Rs. 0</span>
+                </div>
+            </div>
+
             <!-- Shift Status Control Panel (Open / Close Snooker) -->
             <section class="shift-status-panel">
                 <div class="shift-info">
@@ -461,8 +584,8 @@
                 <div class="table-indicators-grid" id="indicators-container"></div>
             </section>
 
-            <main style="padding: 0; flex: 1;">
-                <div class="tables-grid" id="tables-container"></div>
+            <main style="padding: 0; flex: 1; margin: 1.5rem 2rem 2rem 2rem;">
+                <div class="tables-grid" id="tables-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;"></div>
             </main>
         </div>
     </div>
@@ -616,6 +739,22 @@
                     slipUploadGroup.style.display = 'none';
                 }
             });
+
+            // LIVE SMART REVENUE & EXPENSE BAR UPDATER
+            function updateSmartRevenueBar() {
+                const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
+                let totalGameIncome = 0;
+                localHistory.forEach(s => {
+                    totalGameIncome += parseFloat(s.bill || 0);
+                });
+                let canteenSales = 3200; // Canteen / Snacks income baseline
+                let netProfit = totalGameIncome + canteenSales;
+
+                document.getElementById('game-income-display').textContent = `Rs. ${totalGameIncome.toLocaleString()}`;
+                document.getElementById('canteen-income-display').textContent = `Rs. ${canteenSales.toLocaleString()}`;
+                document.getElementById('net-profit-display').textContent = `Rs. ${netProfit.toLocaleString()}`;
+            }
+            updateSmartRevenueBar();
 
             // SHIFT OPEN / CLOSE SYSTEM
             const shiftBadge = document.getElementById('shift-badge-status');
@@ -781,6 +920,8 @@
                 tablesContainer.innerHTML = '';
                 indicatorsContainer.innerHTML = '';
 
+                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+
                 for (let i = 1; i <= total; i++) {
                     const indDiv = document.createElement('div');
                     indDiv.className = 'table-indicator-item';
@@ -791,13 +932,32 @@
                     `;
                     indicatorsContainer.appendChild(indDiv);
 
+                    // Dynamic Neon Ring State Management
+                    let cardClass = 'snooker-table-card status-free';
+                    let badgeClass = 'badge badge-available';
+                    let badgeText = '🟢 FREE';
+
+                    const session = activeSessions[i];
+                    if (session && session.startTime) {
+                        let elapsedMinutes = Math.floor((Date.now() - session.startTime) / 60000);
+                        if (elapsedMinutes >= 55) {
+                            cardClass = 'snooker-table-card status-ending';
+                            badgeClass = 'badge badge-ending';
+                            badgeText = '🟡 ENDING SOON';
+                        } else {
+                            cardClass = 'snooker-table-card status-active';
+                            badgeClass = 'badge badge-playing';
+                            badgeText = '🔴 PLAYING';
+                        }
+                    }
+
                     const cardDiv = document.createElement('div');
-                    cardDiv.className = 'snooker-table-card';
+                    cardDiv.className = cardClass;
                     cardDiv.setAttribute('data-table-id', i);
                     cardDiv.innerHTML = `
                         <div class="table-info-header">
                             <h3 class="table-name">Table ${i}</h3>
-                            <span class="badge badge-available" id="status-badge-${i}">Available</span>
+                            <span class="${badgeClass}" id="status-badge-${i}">${badgeText}</span>
                         </div>
                         <div class="table-image-wrapper">
                             <div class="snooker-table-visual">
@@ -818,7 +978,9 @@
                         </div>
                         <div class="card-footer-info">
                             <div class="timer-display" id="timer-${i}">00:00:00</div>
-                            <button class="btn btn-primary manage-btn" data-table="${i}">Manage Game</button>
+                            <button class="btn btn-primary manage-btn" data-table="${i}" style="width: 100%;">
+                                ${session && session.startTime ? '🏁 Stop & Bill' : '▶️ Start Session'}
+                            </button>
                         </div>
                     `;
                     tablesContainer.appendChild(cardDiv);
@@ -897,18 +1059,9 @@
                     const session = activeSessions[tableId];
                     if (session && session.startTime) {
                         startTimerUI(tableId, session.startTime);
-                        updateBadge(tableId, 'Playing', 'badge-playing');
                     }
                 }
                 updateOverviewCounts();
-            }
-
-            function updateBadge(tableId, text, className) {
-                const badge = document.getElementById(`status-badge-${tableId}`);
-                if(badge) {
-                    badge.textContent = text;
-                    badge.className = `badge ${className}`;
-                }
             }
 
             function startTimerUI(tableId, startTime) {
@@ -1049,9 +1202,6 @@
                     delete activeSessions[tableId];
                     localStorage.setItem('bt_active_sessions', JSON.stringify(activeSessions));
 
-                    updateBadge(tableId, 'Available', 'badge-available');
-                    document.getElementById(`timer-${tableId}`).textContent = '00:00:00';
-
                 } else {
                     // START GAME
                     const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
@@ -1065,10 +1215,11 @@
                     localStorage.setItem('bt_active_sessions', JSON.stringify(activeSessions));
                     
                     startTimerUI(tableId, startTime);
-                    updateBadge(tableId, 'Playing', 'badge-playing');
                 }
 
                 updateOverviewCounts();
+                updateSmartRevenueBar();
+                renderTablesUI();
                 closeManageModal();
             });
 
