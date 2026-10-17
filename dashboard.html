@@ -16,6 +16,58 @@
 
     <link rel="stylesheet" href="css/style.css">
     <style>
+        .shift-status-panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 2rem 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: var(--shadow-card);
+        }
+        .shift-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .shift-badge {
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .shift-open {
+            background: rgba(42, 157, 143, 0.15);
+            color: var(--badge-available);
+            border: 1px solid rgba(42, 157, 143, 0.3);
+        }
+        .shift-closed {
+            background: rgba(231, 111, 81, 0.15);
+            color: #e76f51;
+            border: 1px solid rgba(231, 111, 81, 0.3);
+        }
+        .btn-shift-action {
+            padding: 0.6rem 1.25rem;
+            font-weight: 700;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-open-club {
+            background: linear-gradient(135deg, #2a9d8f, #1d7066);
+            color: #fff;
+        }
+        .btn-close-club {
+            background: linear-gradient(135deg, #e76f51, #b84328);
+            color: #fff;
+        }
+
         .status-overview-panel {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -191,6 +243,39 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.6);
         }
 
+        /* Shift Reports History Panel / Drawer */
+        .reports-drawer {
+            position: fixed;
+            top: 0;
+            right: -380px;
+            width: 360px;
+            height: 100vh;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            z-index: 1050;
+            transition: right 0.3s ease;
+            padding: 1.5rem;
+            box-shadow: -8px 0 24px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+        }
+        .reports-drawer.active { right: 0; }
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .report-item {
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.85rem;
+            margin-bottom: 0.85rem;
+        }
+
         /* Modal Styles */
         .modal-overlay {
             position: fixed;
@@ -250,7 +335,6 @@
             font-size: 1rem;
         }
 
-        /* Mobile Responsive Sidebar Fixes */
         .mobile-menu-toggle {
             display: none;
             background: none;
@@ -261,7 +345,6 @@
             border-radius: var(--radius-md);
             cursor: pointer;
         }
-
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -272,14 +355,10 @@
             background: rgba(0, 0, 0, 0.7);
             z-index: 99;
         }
-        .sidebar-overlay.active {
-            display: block;
-        }
+        .sidebar-overlay.active { display: block; }
 
         @media (max-width: 768px) {
-            .mobile-menu-toggle {
-                display: block;
-            }
+            .mobile-menu-toggle { display: block; }
             .sidebar {
                 position: fixed;
                 top: 0;
@@ -290,19 +369,31 @@
                 transition: left 0.3s ease;
                 background-color: var(--bg-card);
             }
-            .sidebar.active {
-                left: 0;
-            }
-            .status-overview-panel {
+            .sidebar.active { left: 0; }
+            .shift-status-panel, .status-overview-panel {
                 margin: 1rem 1rem 0 1rem;
                 padding: 1rem;
+            }
+        }
+
+        /* Printable PDF Styling Rules */
+        @media print {
+            body * { visibility: hidden; }
+            #printable-sales-report, #printable-sales-report * { visibility: visible; }
+            #printable-sales-report {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                color: #000;
+                background: #fff;
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
     <div class="app-layout">
-        <!-- Overlay for Mobile Sidebar -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <!-- Sidebar Navigation -->
@@ -315,6 +406,7 @@
                 <a href="dashboard.html" class="nav-item active"><span>🎱</span> Tables & Games</a>
                 <a href="history.html" class="nav-item"><span>📊</span> Session History</a>
                 <a href="settings.html" class="nav-item"><span>⚙️</span> Settings & Rates</a>
+                <button id="toggle-reports-btn" class="nav-item" style="background: none; border: none; cursor: pointer; text-align: left; width: 100%;"><span>📑</span> Shift Sales Reports</button>
                 <button id="logout-btn" class="nav-item" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; margin-top: auto;"><span>🚪</span> Sign Out</button>
             </nav>
         </aside>
@@ -335,7 +427,21 @@
                 </div>
             </header>
 
-            <!-- Table Status Overview & Controls Section -->
+            <!-- Shift Status Control Panel (Open / Close Snooker) -->
+            <section class="shift-status-panel">
+                <div class="shift-info">
+                    <span id="shift-badge-status" class="shift-badge shift-closed">Club Closed</span>
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.95rem;" id="shift-time-label">Shift Status: Offline</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);" id="shift-start-time-text">Click Open Snooker to start sales tracking.</div>
+                    </div>
+                </div>
+                <div>
+                    <button id="shift-action-btn" class="btn-shift-action btn-open-club">🟢 Open Snooker Club</button>
+                </div>
+            </section>
+
+            <!-- Table Status Overview Section -->
             <section class="status-overview-panel">
                 <div class="overview-header">
                     <h3 class="overview-title">Table Live Status</h3>
@@ -357,6 +463,44 @@
             <main style="padding: 0; flex: 1;">
                 <div class="tables-grid" id="tables-container"></div>
             </main>
+        </div>
+    </div>
+
+    <!-- Reports Drawer Panel -->
+    <div id="reports-drawer" class="reports-drawer">
+        <div class="drawer-header">
+            <h3 style="color: var(--gold-primary);">Shift Sales Reports</h3>
+            <button id="close-drawer-btn" style="background: none; border: none; color: #fff; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+        <div id="drawer-reports-list" style="flex: 1; overflow-y: auto;">
+            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No shift sales reports saved yet.</p>
+        </div>
+    </div>
+
+    <!-- Hidden Printable Sales PDF Sheet -->
+    <div id="printable-sales-report" style="display: none;">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="margin: 0; font-size: 24px; color: #000;" id="pdf-club-title">CUEDESK SNOOKER CLUB</h1>
+            <p style="margin: 5px 0; font-size: 14px;">Shift Final Sales & Revenue Report</p>
+            <p style="margin: 0; font-size: 12px; color: #555;" id="pdf-shift-dates">Shift Period: --</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="background: #f0f0f0;">
+                    <th style="border: 1px solid #ccc; padding: 8px;">Table</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Game</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Format</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Duration</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Bill</th>
+                </tr>
+            </thead>
+            <tbody id="pdf-table-body"></tbody>
+        </table>
+
+        <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 10px;">
+            <h2 style="margin: 0; font-size: 20px;" id="pdf-total-revenue">Total Revenue: Rs. 0</h2>
+            <p style="font-size: 11px; margin-top: 5px; color: #666;">Generated via CUEDESK Snooker Management System</p>
         </div>
     </div>
 
@@ -404,7 +548,7 @@
         import { supabase } from './js/supabase.js';
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Setup Mobile Navigation Menu
+            // Mobile Sidebar Toggle
             const mobileToggle = document.getElementById('mobile-menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -414,12 +558,21 @@
                     sidebar.classList.toggle('active');
                     sidebarOverlay.classList.toggle('active');
                 });
-
                 sidebarOverlay.addEventListener('click', () => {
                     sidebar.classList.remove('active');
                     sidebarOverlay.classList.remove('active');
                 });
             }
+
+            // Reports Drawer Controls
+            const reportsDrawer = document.getElementById('reports-drawer');
+            document.getElementById('toggle-reports-btn').addEventListener('click', () => {
+                reportsDrawer.classList.add('active');
+                loadSavedReportsList();
+            });
+            document.getElementById('close-drawer-btn').addEventListener('click', () => {
+                reportsDrawer.classList.remove('active');
+            });
 
             await fetchSupabaseClubProfile();
 
@@ -435,6 +588,137 @@
 
             const tablesContainer = document.getElementById('tables-container');
             const indicatorsContainer = document.getElementById('indicators-container');
+
+            // --- SHIFT OPEN / CLOSE SYSTEM ---
+            const shiftBadge = document.getElementById('shift-badge-status');
+            const shiftTimeLabel = document.getElementById('shift-time-label');
+            const shiftStartText = document.getElementById('shift-start-time-text');
+            const shiftActionBtn = document.getElementById('shift-action-btn');
+
+            function updateShiftUI() {
+                const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
+                if (activeShift && activeShift.isOpen) {
+                    shiftBadge.textContent = 'Club Open';
+                    shiftBadge.className = 'shift-badge shift-open';
+                    shiftTimeLabel.textContent = 'Shift Status: Online';
+                    shiftStartText.textContent = `Opened at: ${new Date(activeShift.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}`;
+                    shiftActionBtn.textContent = '🔴 Close Snooker & Get PDF Sales Report';
+                    shiftActionBtn.className = 'btn-shift-action btn-close-club';
+                } else {
+                    shiftBadge.textContent = 'Club Closed';
+                    shiftBadge.className = 'shift-badge shift-closed';
+                    shiftTimeLabel.textContent = 'Shift Status: Offline';
+                    shiftStartText.textContent = 'Click Open Snooker to start fresh shift sales.';
+                    shiftActionBtn.textContent = '🟢 Open Snooker Club';
+                    shiftActionBtn.className = 'btn-shift-action btn-open-club';
+                }
+            }
+
+            shiftActionBtn.addEventListener('click', async () => {
+                const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
+
+                if (!activeShift || !activeShift.isOpen) {
+                    // OPEN CLUB
+                    const newShift = {
+                        isOpen: true,
+                        startTime: Date.now()
+                    };
+                    localStorage.setItem('cuedesk_active_shift', JSON.stringify(newShift));
+                    updateShiftUI();
+                    alert('Snooker Club is now OPEN! Fresh shift sales tracking started.');
+                } else {
+                    // CLOSE CLUB & GENERATE PDF
+                    const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                    if (Object.keys(activeSessions).length > 0) {
+                        alert('Warning: Some tables are currently active playing! Please end all active games before closing the shift.');
+                        return;
+                    }
+
+                    if (confirm('Are you sure you want to CLOSE the Snooker Club and generate the shift PDF sales report?')) {
+                        await closeShiftAndGeneratePDF(activeShift.startTime);
+                    }
+                }
+            });
+
+            async function closeShiftAndGeneratePDF(startTime) {
+                const endTime = Date.now();
+                const clubName = localStorage.getItem('cuedesk_club_name') || 'CUEDESK SNOOKER CLUB';
+                
+                // Get all game sessions recorded during this shift
+                const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
+                const shiftSessions = localHistory.filter(s => {
+                    const sessionTime = s.timestamp ? new Date(s.timestamp).getTime() : Date.now();
+                    return sessionTime >= startTime;
+                });
+
+                let shiftTotal = 0;
+                const pdfBody = document.getElementById('pdf-table-body');
+                pdfBody.innerHTML = '';
+
+                if (shiftSessions.length === 0) {
+                    pdfBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 10px;">No games played in this shift.</td></tr>`;
+                } else {
+                    shiftSessions.forEach(s => {
+                        shiftTotal += parseFloat(s.bill);
+                        pdfBody.innerHTML += `
+                            <tr>
+                                <td style="border: 1px solid #ccc; padding: 6px; text-align: center;">Table ${s.tableId}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">${s.gameType}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">${s.format}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">${s.duration}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px; font-weight: bold;">Rs. ${s.bill}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                document.getElementById('pdf-club-title').textContent = clubName.toUpperCase();
+                document.getElementById('pdf-shift-dates').textContent = `Shift: ${new Date(startTime).toLocaleString()} - ${new Date(endTime).toLocaleString()}`;
+                document.getElementById('pdf-total-revenue').textContent = `Total Shift Revenue: Rs. ${shiftTotal}`;
+
+                // Save report to history list
+                const savedReports = JSON.parse(localStorage.getItem('cuedesk_saved_reports') || '[]');
+                savedReports.unshift({
+                    date: new Date().toLocaleDateString(),
+                    startTime: new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    endTime: new Date(endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    revenue: shiftTotal,
+                    totalGames: shiftSessions.length
+                });
+                localStorage.setItem('cuedesk_saved_reports', JSON.stringify(savedReports));
+
+                // Clear shift status
+                localStorage.removeItem('cuedesk_active_shift');
+                updateShiftUI();
+
+                // Trigger Print PDF
+                const printDiv = document.getElementById('printable-sales-report');
+                printDiv.style.display = 'block';
+                window.print();
+                printDiv.style.display = 'none';
+            }
+
+            function loadSavedReportsList() {
+                const listContainer = document.getElementById('drawer-reports-list');
+                const saved = JSON.parse(localStorage.getItem('cuedesk_saved_reports') || '[]');
+                
+                if (saved.length === 0) {
+                    listContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No shift sales reports saved yet.</p>`;
+                    return;
+                }
+
+                listContainer.innerHTML = '';
+                saved.forEach((rep, index) => {
+                    listContainer.innerHTML += `
+                        <div class="report-item">
+                            <div style="font-weight: bold; color: var(--gold-primary);">📅 ${rep.date} Shift</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin: 0.2rem 0;">Time: ${rep.startTime} - ${rep.endTime}</div>
+                            <div style="font-size: 0.85rem;">Games Played: <strong>${rep.totalGames}</strong></div>
+                            <div style="font-size: 0.9rem; font-weight: bold; color: var(--badge-available); margin-top: 0.3rem;">Revenue: Rs. ${rep.revenue}</div>
+                        </div>
+                    `;
+                });
+            }
 
             function getTotalTables() {
                 return parseInt(localStorage.getItem('cuedesk_total_tables') || '5');
@@ -692,14 +976,15 @@
                     };
 
                     const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
-                    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const now = new Date();
                     localHistory.unshift({
                         tableId,
                         gameType: sessionPayload.game_type,
                         format: sessionPayload.game_format,
                         duration: `${durationMins} mins`,
                         bill,
-                        time: timeString
+                        timestamp: now.toISOString(),
+                        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     });
                     localStorage.setItem('bare_tallies_history', JSON.stringify(localHistory));
 
@@ -720,6 +1005,12 @@
 
                 } else {
                     // START GAME
+                    const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
+                    if (!activeShift || !activeShift.isOpen) {
+                        alert('Please click "Open Snooker Club" at the top before starting games!');
+                        return;
+                    }
+
                     const startTime = Date.now();
                     activeSessions[tableId] = { startTime, gameType, format };
                     localStorage.setItem('bt_active_sessions', JSON.stringify(activeSessions));
@@ -732,6 +1023,7 @@
                 closeManageModal();
             });
 
+            updateShiftUI();
             renderTablesUI();
         });
     </script>
