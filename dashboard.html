@@ -16,7 +16,6 @@
 
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Table Overview Section Styles */
         .status-overview-panel {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -30,11 +29,45 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
         .overview-title {
             color: var(--gold-primary);
             font-size: 1.1rem;
             font-weight: 600;
+        }
+        .overview-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .table-control-btn {
+            padding: 0.4rem 0.85rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .btn-add-table {
+            background: rgba(42, 157, 143, 0.2);
+            color: #2a9d8f;
+            border-color: rgba(42, 157, 143, 0.4);
+        }
+        .btn-add-table:hover {
+            background: #2a9d8f;
+            color: #fff;
+        }
+        .btn-remove-table {
+            background: rgba(231, 111, 81, 0.2);
+            color: #e76f51;
+            border-color: rgba(231, 111, 81, 0.4);
+        }
+        .btn-remove-table:hover {
+            background: #e76f51;
+            color: #fff;
         }
         .overview-stats {
             display: flex;
@@ -173,59 +206,38 @@
                     <h2 class="header-title">Tables & Games</h2>
                 </div>
                 <div class="owner-profile">
-                    <div class="profile-info">
-                        <span class="profile-name">Club Owner</span>
-                        <span class="profile-role">Administrator</span>
+                    <div class="profile-info" style="text-align: right;">
+                        <span class="profile-name" id="display-club-name" style="color: var(--gold-primary); font-weight: bold;">Loading Club...</span>
+                        <span class="profile-role">Club Administrator</span>
                     </div>
-                    <div class="profile-avatar">CD</div>
+                    <div class="profile-avatar" id="display-club-avatar">SC</div>
                 </div>
             </header>
 
-            <!-- Table Status Overview Section -->
+            <!-- Table Status Overview & Controls Section -->
             <section class="status-overview-panel">
                 <div class="overview-header">
                     <h3 class="overview-title">Table Live Status</h3>
+                    
+                    <!-- Table Management Quick Controls -->
+                    <div class="overview-actions">
+                        <button class="table-control-btn btn-add-table" id="btn-add-table">➕ Add Table</button>
+                        <button class="table-control-btn btn-remove-table" id="btn-remove-table">➖ Remove Table</button>
+                    </div>
+
                     <div class="overview-stats">
                         <span class="stat-pill playing"><span id="count-playing">0</span> Playing</span>
-                        <span class="stat-pill available"><span id="count-available">5</span> Available</span>
+                        <span class="stat-pill available"><span id="count-available">0</span> Available</span>
                     </div>
                 </div>
-                <div class="table-indicators-grid" id="indicators-container">
-                    <script>
-                        for(let i=1; i<=5; i++) {
-                            document.write(`
-                                <div class="table-indicator-item" id="indicator-item-${i}">
-                                    <span style="font-weight: 600; font-size: 0.9rem;">Table ${i}</span>
-                                    <div class="status-dot" id="dot-${i}"></div>
-                                </div>
-                            `);
-                        }
-                    </script>
-                </div>
+                
+                <!-- Dynamic Live Indicators Grid -->
+                <div class="table-indicators-grid" id="indicators-container"></div>
             </section>
 
             <main style="padding: 0; flex: 1;">
-                <div class="tables-grid" id="tables-container">
-                    <script>
-                        for(let i=1; i<=5; i++) {
-                            document.write(`
-                                <div class="snooker-table-card" data-table-id="${i}">
-                                    <div class="table-info-header">
-                                        <h3 class="table-name">Table ${i}</h3>
-                                        <span class="badge badge-available" id="status-badge-${i}">Available</span>
-                                    </div>
-                                    <div class="table-image-wrapper">
-                                        <img src="https://image.made-in-china.com/202f0j00WZfqUNLnEgrm/Snooker-Pool-Table-Billiard-Table-with-Precise-Pockets-Smooth-Cloth.webp" alt="Snooker Table ${i}">
-                                    </div>
-                                    <div class="card-footer-info">
-                                        <div class="timer-display" id="timer-${i}">00:00:00</div>
-                                        <button class="btn btn-primary manage-btn" data-table="${i}">Manage Game</button>
-                                    </div>
-                                </div>
-                            `);
-                        }
-                    </script>
-                </div>
+                <!-- Dynamic Tables Grid -->
+                <div class="tables-grid" id="tables-container"></div>
             </main>
         </div>
     </div>
@@ -273,7 +285,9 @@
     <script type="module">
         import { supabase } from './js/supabase.js';
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchSupabaseClubProfile();
+
             const timerIntervals = {};
             const modal = document.getElementById('manage-modal');
             const gameTypeSelect = document.getElementById('game-type');
@@ -283,6 +297,32 @@
             const activeTableInput = document.getElementById('active-table-id');
             const modalTableTitle = document.getElementById('modal-table-title');
             const modalActionBtn = document.getElementById('modal-action-btn');
+
+            const tablesContainer = document.getElementById('tables-container');
+            const indicatorsContainer = document.getElementById('indicators-container');
+
+            // 1. Get Total Tables (Default to 5 if not set)
+            function getTotalTables() {
+                return parseInt(localStorage.getItem('cuedesk_total_tables') || '5');
+            }
+
+            function setTotalTables(count) {
+                localStorage.setItem('cuedesk_total_tables', count.toString());
+            }
+
+            async function fetchSupabaseClubProfile() {
+                let clubName = 'Snooker Club';
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user && user.user_metadata && user.user_metadata.club_name) {
+                        clubName = user.user_metadata.club_name;
+                    }
+                } catch (e) {}
+
+                document.getElementById('display-club-name').textContent = clubName;
+                const initials = clubName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                document.getElementById('display-club-avatar').textContent = initials || 'SC';
+            }
 
             function getRates() {
                 const defaultRates = {
@@ -296,10 +336,93 @@
                 return { ...defaultRates, ...saved };
             }
 
+            // 2. Dynamic Rendering of Tables & Indicators
+            function renderTablesUI() {
+                const total = getTotalTables();
+                tablesContainer.innerHTML = '';
+                indicatorsContainer.innerHTML = '';
+
+                for (let i = 1; i <= total; i++) {
+                    // Indicator Item
+                    const indDiv = document.createElement('div');
+                    indDiv.className = 'table-indicator-item';
+                    indDiv.id = `indicator-item-${i}`;
+                    indDiv.innerHTML = `
+                        <span style="font-weight: 600; font-size: 0.9rem;">Table ${i}</span>
+                        <div class="status-dot" id="dot-${i}"></div>
+                    `;
+                    indicatorsContainer.appendChild(indDiv);
+
+                    // Table Card
+                    const cardDiv = document.createElement('div');
+                    cardDiv.className = 'snooker-table-card';
+                    cardDiv.setAttribute('data-table-id', i);
+                    cardDiv.innerHTML = `
+                        <div class="table-info-header">
+                            <h3 class="table-name">Table ${i}</h3>
+                            <span class="badge badge-available" id="status-badge-${i}">Available</span>
+                        </div>
+                        <div class="table-image-wrapper">
+                            <img src="https://image.made-in-china.com/202f0j00WZfqUNLnEgrm/Snooker-Pool-Table-Billiard-Table-with-Precise-Pockets-Smooth-Cloth.webp" alt="Snooker Table ${i}">
+                        </div>
+                        <div class="card-footer-info">
+                            <div class="timer-display" id="timer-${i}">00:00:00</div>
+                            <button class="btn btn-primary manage-btn" data-table="${i}">Manage Game</button>
+                        </div>
+                    `;
+                    tablesContainer.appendChild(cardDiv);
+                }
+
+                // Re-bind Event Listeners
+                document.querySelectorAll('.manage-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const tableId = btn.getAttribute('data-table');
+                        openManageModal(tableId);
+                    });
+                });
+
+                initPersistentSessions();
+            }
+
+            // 3. Add & Remove Table Handlers
+            document.getElementById('btn-add-table').addEventListener('click', () => {
+                let current = getTotalTables();
+                if (current >= 20) {
+                    alert('Maximum 20 tables allowed!');
+                    return;
+                }
+                setTotalTables(current + 1);
+                renderTablesUI();
+            });
+
+            document.getElementById('btn-remove-table').addEventListener('click', () => {
+                let current = getTotalTables();
+                if (current <= 1) {
+                    alert('Minimum 1 table is required!');
+                    return;
+                }
+
+                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                if (activeSessions[current]) {
+                    alert(`Cannot remove Table ${current} while a game is currently playing on it! Please end the game first.`);
+                    return;
+                }
+
+                if (confirm(`Are you sure you want to remove Table ${current}?`)) {
+                    setTotalTables(current - 1);
+                    renderTablesUI();
+                }
+            });
+
             function updateOverviewCounts() {
                 const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
-                const playingCount = Object.keys(activeSessions).length;
-                const totalTables = 5;
+                const totalTables = getTotalTables();
+                
+                let playingCount = 0;
+                for (let i = 1; i <= totalTables; i++) {
+                    if (activeSessions[i]) playingCount++;
+                }
+
                 const availableCount = totalTables - playingCount;
 
                 document.getElementById('count-playing').textContent = playingCount;
@@ -307,17 +430,21 @@
 
                 for (let i = 1; i <= totalTables; i++) {
                     const item = document.getElementById(`indicator-item-${i}`);
-                    if (activeSessions[i]) {
-                        item.classList.add('is-playing');
-                    } else {
-                        item.classList.remove('is-playing');
+                    if (item) {
+                        if (activeSessions[i]) {
+                            item.classList.add('is-playing');
+                        } else {
+                            item.classList.remove('is-playing');
+                        }
                     }
                 }
             }
 
             function initPersistentSessions() {
                 const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
-                for (let tableId in activeSessions) {
+                const totalTables = getTotalTables();
+
+                for (let tableId = 1; tableId <= totalTables; tableId++) {
                     const session = activeSessions[tableId];
                     if (session && session.startTime) {
                         startTimerUI(tableId, session.startTime);
@@ -348,13 +475,6 @@
                     if(timerElem) timerElem.textContent = `${hrs}:${mins}:${secs}`;
                 }, 1000);
             }
-
-            document.querySelectorAll('.manage-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tableId = btn.getAttribute('data-table');
-                    openManageModal(tableId);
-                });
-            });
 
             function openManageModal(tableId) {
                 activeTableInput.value = tableId;
@@ -469,7 +589,8 @@
                 closeManageModal();
             });
 
-            initPersistentSessions();
+            // Initial Build
+            renderTablesUI();
         });
     </script>
 </body>
