@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings & Rates - CUEDESK</title>
 
+    <script type="importmap">
+      {
+        "imports": {
+          "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+        }
+      }
+    </script>
+
     <link rel="stylesheet" href="css/style.css">
     <style>
         .settings-container {
@@ -67,13 +75,36 @@
 
         <div class="main-content">
             <header class="top-header">
-                <h2 class="header-title">Club Rates & Configurations</h2>
+                <h2 class="header-title">Club Settings & Configurations</h2>
                 <div class="owner-profile">
-                    <div class="profile-avatar">CD</div>
+                    <div class="profile-info" style="text-align: right;">
+                        <span class="profile-name" id="display-club-name" style="color: var(--gold-primary); font-weight: bold;">Loading...</span>
+                        <span class="profile-role">Club Administrator</span>
+                    </div>
+                    <div class="profile-avatar" id="display-club-avatar">SC</div>
                 </div>
             </header>
 
             <main class="settings-container">
+                <!-- Club Profile & Tables Count Card -->
+                <div class="settings-card">
+                    <h3 class="settings-title">Club Details & Tables</h3>
+                    <form id="club-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Snooker Club Name</label>
+                                <input type="text" id="setting-club-name" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Total Tables Count</label>
+                                <input type="number" id="setting-total-tables" class="form-input" min="1" max="20" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Update Club Details</button>
+                    </form>
+                </div>
+
+                <!-- Pricing Rates Card -->
                 <div class="settings-card">
                     <h3 class="settings-title">Manage Pricing Rates (Rs.)</h3>
                     <form id="rates-form">
@@ -112,8 +143,29 @@
     </div>
 
     <script type="module" src="js/auth.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            let clubName = localStorage.getItem('cuedesk_club_name') || 'My Snooker Club';
+            let totalTables = localStorage.getItem('cuedesk_total_tables') || '5';
+            
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user && user.user_metadata && user.user_metadata.club_name) {
+                    clubName = user.user_metadata.club_name;
+                    localStorage.setItem('cuedesk_club_name', clubName);
+                }
+            } catch (e) {}
+
+            document.getElementById('display-club-name').textContent = clubName;
+            document.getElementById('setting-club-name').value = clubName;
+            document.getElementById('setting-total-tables').value = totalTables;
+            
+            const initials = clubName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('display-club-avatar').textContent = initials || 'SC';
+
+            // Rates Initial Load
             const defaultRates = {
                 century: 7,
                 oneballSingle: 100,
@@ -121,7 +173,6 @@
                 fullframeSingle: 150,
                 fullframeDouble: 300
             };
-
             const savedRates = JSON.parse(localStorage.getItem('bt_rates') || JSON.stringify(defaultRates));
 
             document.getElementById('rate-century').value = savedRates.century;
@@ -130,9 +181,28 @@
             document.getElementById('rate-fullframe-single').value = savedRates.fullframeSingle;
             document.getElementById('rate-fullframe-double').value = savedRates.fullframeDouble;
 
+            // Save Club Details & Tables
+            document.getElementById('club-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newClubName = document.getElementById('setting-club-name').value;
+                const newTotalTables = document.getElementById('setting-total-tables').value;
+
+                localStorage.setItem('cuedesk_club_name', newClubName);
+                localStorage.setItem('cuedesk_total_tables', newTotalTables);
+
+                try {
+                    await supabase.auth.updateUser({
+                        data: { club_name: newClubName }
+                    });
+                } catch (err) {}
+
+                alert('Club details & table count updated successfully!');
+                window.location.reload();
+            });
+
+            // Save Rates
             document.getElementById('rates-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-
                 const updatedRates = {
                     century: parseFloat(document.getElementById('rate-century').value),
                     oneballSingle: parseFloat(document.getElementById('rate-oneball-single').value),
