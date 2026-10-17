@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Session History - CUEDESK</title>
+    <title>Session History & Revenue - CUEDESK</title>
 
-    <!-- Supabase Module Import -->
+    <!-- Supabase Module Import Map -->
     <script type="importmap">
       {
         "imports": {
@@ -32,6 +32,28 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
+        .date-filter-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #121212;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+        }
+        .date-input {
+            background: transparent;
+            border: none;
+            color: var(--gold-primary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+        .date-input::-webkit-calendar-picker-indicator {
+            filter: invert(0.8) sepia(100%) saturate(500%) hue-rotate(5deg);
+            cursor: pointer;
+        }
         .history-table-wrapper {
             overflow-x: auto;
         }
@@ -42,7 +64,7 @@
             min-width: 600px;
         }
         .history-table th, .history-table td {
-            padding: 1rem;
+            padding: 0.85rem 1rem;
             border-bottom: 1px solid var(--border-color);
         }
         .history-table th {
@@ -51,12 +73,23 @@
             text-transform: uppercase;
             font-size: 0.85rem;
         }
+        /* Date Divider Row Style */
+        .date-divider-row td {
+            background: rgba(212, 175, 55, 0.08);
+            color: var(--gold-light);
+            font-weight: bold;
+            font-size: 0.95rem;
+            border-top: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+            padding: 0.75rem 1rem;
+        }
         .total-badge {
             background: rgba(212,175,55,0.15);
             color: var(--gold-light);
             padding: 0.5rem 1rem;
             border-radius: var(--radius-md);
             font-weight: bold;
+            font-size: 1rem;
         }
         .clear-btn {
             background: rgba(231, 111, 81, 0.2);
@@ -129,7 +162,7 @@
             <header class="top-header">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <button id="mobile-menu-toggle" class="mobile-menu-toggle">☰</button>
-                    <h2 class="header-title" style="font-size: 1.2rem;">Session History</h2>
+                    <h2 class="header-title" style="font-size: 1.2rem;">Session History & Sales</h2>
                 </div>
                 <div class="owner-profile">
                     <div class="profile-info" style="text-align: right;">
@@ -143,9 +176,15 @@
             <main>
                 <div class="history-card">
                     <div class="history-header">
-                        <h3>Ended Sessions & Revenue</h3>
+                        <!-- Date Filter Control -->
+                        <div class="date-filter-box">
+                            <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Select Date:</span>
+                            <input type="date" id="history-date-picker" class="date-input">
+                            <button id="reset-date-btn" class="table-control-btn" style="background: #2a2a2a; color: #fff; font-size: 0.75rem; padding: 0.3rem 0.6rem;">Show All</button>
+                        </div>
+
                         <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                            <span class="total-badge" id="total-revenue">Total Revenue: Rs. 0</span>
+                            <span class="total-badge" id="total-revenue">Revenue: Rs. 0</span>
                             <button class="clear-btn" id="clear-history-btn">Clear All History</button>
                         </div>
                     </div>
@@ -176,7 +215,10 @@
     <script type="module">
         import { supabase } from './js/supabase.js';
 
+        let allSessions = [];
+
         document.addEventListener('DOMContentLoaded', async () => {
+            // Mobile Menu
             const mobileToggle = document.getElementById('mobile-menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -192,6 +234,12 @@
                 });
             }
 
+            // Set default date picker value to Today
+            const datePicker = document.getElementById('history-date-picker');
+            const todayStr = new Date().toISOString().split('T')[0];
+            datePicker.value = todayStr;
+
+            // Load Club Metadata
             let clubName = localStorage.getItem('cuedesk_club_name') || 'Snooker Club';
             try {
                 const { data: { user } } = await supabase.auth.getUser();
@@ -203,72 +251,121 @@
             const initials = clubName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
             document.getElementById('display-club-avatar').textContent = initials || 'SC';
 
-            await loadHistory();
+            // Initial Fetch & Render
+            await fetchAllSessions();
+
+            // Date Picker Event Listeners
+            datePicker.addEventListener('change', () => filterAndRenderHistory(datePicker.value));
+            document.getElementById('reset-date-btn').addEventListener('click', () => {
+                datePicker.value = '';
+                filterAndRenderHistory('');
+            });
         });
 
-        async function loadHistory() {
-            const tbody = document.getElementById('history-rows');
-            const totalElem = document.getElementById('total-revenue');
-            let historyData = [];
-            let totalRevenue = 0;
+        async function fetchAllSessions() {
+            allSessions = [];
 
+            // 1. Fetch Cloud Sessions from Supabase
             try {
                 const { data, error } = await supabase.from('game_sessions').select('*').order('created_at', { ascending: false });
                 if (!error && data && data.length > 0) {
-                    historyData = data.map(item => ({
+                    allSessions = data.map(item => ({
                         id: item.id,
                         tableId: item.table_id,
                         gameType: item.game_type,
                         format: item.game_format || 'N/A',
                         duration: `${item.duration_minutes} mins`,
                         bill: parseFloat(item.total_bill),
-                        time: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        createdAt: new Date(item.created_at)
                     }));
                 }
             } catch (e) {}
 
-            if (historyData.length === 0) {
-                historyData = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
+            // 2. Local Storage Fallback
+            const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
+            if (allSessions.length === 0 && localHistory.length > 0) {
+                allSessions = localHistory.map(item => ({
+                    tableId: item.tableId,
+                    gameType: item.gameType,
+                    format: item.format,
+                    duration: item.duration,
+                    bill: parseFloat(item.bill),
+                    createdAt: item.timestamp ? new Date(item.timestamp) : new Date()
+                }));
             }
 
-            if (historyData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No sessions recorded yet.</td></tr>`;
-                totalElem.textContent = `Total Revenue: Rs. 0`;
+            // Filter today's sales by default
+            const todayStr = document.getElementById('history-date-picker').value;
+            filterAndRenderHistory(todayStr);
+        }
+
+        function filterAndRenderHistory(selectedDate) {
+            const tbody = document.getElementById('history-rows');
+            const totalElem = document.getElementById('total-revenue');
+
+            let filtered = allSessions;
+
+            // Filter by Date if selected
+            if (selectedDate) {
+                filtered = allSessions.filter(s => {
+                    const sessionDateStr = s.createdAt.toISOString().split('T')[0];
+                    return sessionDateStr === selectedDate;
+                });
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No sessions recorded for ${selectedDate || 'this period'}.</td></tr>`;
+                totalElem.textContent = `Revenue: Rs. 0`;
                 return;
             }
 
             tbody.innerHTML = '';
-            historyData.forEach(item => {
-                totalRevenue += item.bill;
+            let totalRevenue = 0;
+            let lastDateHeading = '';
+
+            filtered.forEach(session => {
+                totalRevenue += session.bill;
+
+                // Format Dates & Times
+                const dateHeading = session.createdAt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                const timeString = session.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                // Add Date Separator Row when date changes
+                if (!selectedDate && dateHeading !== lastDateHeading) {
+                    tbody.innerHTML += `
+                        <tr class="date-divider-row">
+                            <td colspan="6">📅 ${dateHeading}</td>
+                        </tr>
+                    `;
+                    lastDateHeading = dateHeading;
+                }
+
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>Table ${item.tableId}</strong></td>
-                        <td>${item.gameType}</td>
-                        <td>${item.format}</td>
-                        <td>${item.duration}</td>
-                        <td style="color: var(--gold-primary); font-weight: bold;">Rs. ${item.bill}</td>
-                        <td>${item.time}</td>
+                        <td><strong>Table ${session.tableId}</strong></td>
+                        <td>${session.gameType}</td>
+                        <td>${session.format}</td>
+                        <td>${session.duration}</td>
+                        <td style="color: var(--gold-primary); font-weight: bold;">Rs. ${session.bill}</td>
+                        <td>${timeString}</td>
                     </tr>
                 `;
             });
 
-            totalElem.textContent = `Total Revenue: Rs. ${totalRevenue}`;
+            totalElem.textContent = selectedDate ? `Selected Date Revenue: Rs. ${totalRevenue}` : `Total Revenue: Rs. ${totalRevenue}`;
         }
 
+        // Clear All History Button
         document.getElementById('clear-history-btn').addEventListener('click', async () => {
-            if (confirm('Are you sure you want to clear all session history from cloud and local?')) {
-                // Clear Local Storage
+            if (confirm('Are you sure you want to clear all session history?')) {
                 localStorage.removeItem('bare_tallies_history');
 
-                // Clear Supabase Cloud Table Data
                 try {
                     const { error } = await supabase.from('game_sessions').delete().neq('table_id', 0);
                     if (error) throw error;
-                } catch (err) {
-                    console.log('Cloud delete note:', err.message);
-                }
+                } catch (err) {}
 
-                await loadHistory();
+                await fetchAllSessions();
                 alert('All history cleared successfully!');
             }
         });
