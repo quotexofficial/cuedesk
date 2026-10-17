@@ -29,11 +29,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .history-table-wrapper {
+            overflow-x: auto;
         }
         .history-table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
+            min-width: 600px;
         }
         .history-table th, .history-table td {
             padding: 1rem;
@@ -62,10 +68,50 @@
             font-weight: 600;
         }
         .clear-btn:hover { background: #e76f51; color: #fff; }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--gold-primary);
+            font-size: 1.5rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 99;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle { display: block; }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -260px;
+                width: 250px;
+                height: 100vh;
+                z-index: 100;
+                transition: left 0.3s ease;
+                background-color: var(--bg-card);
+            }
+            .sidebar.active { left: 0; }
+            .history-card { margin: 1rem; padding: 1rem; }
+        }
     </style>
 </head>
 <body>
     <div class="app-layout">
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <h1 class="brand-title">CUEDESK</h1>
@@ -81,37 +127,46 @@
 
         <div class="main-content">
             <header class="top-header">
-                <h2 class="header-title">Session History & Revenue</h2>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="mobile-menu-toggle" class="mobile-menu-toggle">☰</button>
+                    <h2 class="header-title" style="font-size: 1.2rem;">Session History</h2>
+                </div>
                 <div class="owner-profile">
-                    <div class="profile-avatar">CD</div>
+                    <div class="profile-info" style="text-align: right;">
+                        <span class="profile-name" id="display-club-name" style="color: var(--gold-primary); font-weight: bold;">Loading...</span>
+                        <span class="profile-role">Admin</span>
+                    </div>
+                    <div class="profile-avatar" id="display-club-avatar">SC</div>
                 </div>
             </header>
 
             <main>
                 <div class="history-card">
                     <div class="history-header">
-                        <h3>Today's Ended Sessions</h3>
-                        <div style="display: flex; gap: 1rem; align-items: center;">
+                        <h3>Ended Sessions & Revenue</h3>
+                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                             <span class="total-badge" id="total-revenue">Total Revenue: Rs. 0</span>
                             <button class="clear-btn" id="clear-history-btn">Clear Local History</button>
                         </div>
                     </div>
 
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Table #</th>
-                                <th>Game Type</th>
-                                <th>Format</th>
-                                <th>Duration</th>
-                                <th>Total Bill</th>
-                                <th>Time Ended</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-rows">
-                            <tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Loading sessions...</td></tr>
-                        </tbody>
-                    </table>
+                    <div class="history-table-wrapper">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Table #</th>
+                                    <th>Game Type</th>
+                                    <th>Format</th>
+                                    <th>Duration</th>
+                                    <th>Total Bill</th>
+                                    <th>Time Ended</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-rows">
+                                <tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Loading sessions...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </main>
         </div>
@@ -121,14 +176,48 @@
     <script type="module">
         import { supabase } from './js/supabase.js';
 
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Mobile Menu Setup
+            const mobileToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            if (mobileToggle && sidebar && sidebarOverlay) {
+                mobileToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                    sidebarOverlay.classList.toggle('active');
+                });
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+
+            // Load Club Name
+            let clubName = localStorage.getItem('cuedesk_club_name') || 'Snooker Club';
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user && user.user_metadata && user.user_metadata.club_name) {
+                    clubName = user.user_metadata.club_name;
+                }
+            } catch (e) {}
+            document.getElementById('display-club-name').textContent = clubName;
+            const initials = clubName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('display-club-avatar').textContent = initials || 'SC';
+
+            // Load History Data
+            await loadHistory();
+        });
+
         async function loadHistory() {
             const tbody = document.getElementById('history-rows');
             const totalElem = document.getElementById('total-revenue');
             let historyData = [];
             let totalRevenue = 0;
 
+            // Fetch from Supabase
             try {
-                const { data, error } = await supabase.from('game_sessions').select('*').order('created_at', { ascending: false });
+                const { data, error } = await import('./js/supabase.js').then(m => m.supabase.from('game_sessions').select('*').order('created_at', { ascending: false }));
                 if (!error && data && data.length > 0) {
                     historyData = data.map(item => ({
                         tableId: item.table_id,
@@ -139,16 +228,15 @@
                         time: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     }));
                 }
-            } catch (e) {
-                console.log('Falling back to local history...');
-            }
+            } catch (e) {}
 
+            // Fallback / Combined with local storage if cloud is empty
             if (historyData.length === 0) {
                 historyData = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
             }
 
             if (historyData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No sessions recorded yet today.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No sessions recorded yet.</td></tr>`;
                 totalElem.textContent = `Total Revenue: Rs. 0`;
                 return;
             }
@@ -172,13 +260,12 @@
         }
 
         document.getElementById('clear-history-btn').addEventListener('click', () => {
-            if (confirm('Clear local history backup?')) {
+            if (confirm('Are you sure you want to clear local history backup?')) {
                 localStorage.removeItem('bare_tallies_history');
-                loadHistory();
+                loadHistory(); // Immediate UI re-render
+                alert('Local history cleared successfully!');
             }
         });
-
-        document.addEventListener('DOMContentLoaded', loadHistory);
     </script>
 </body>
 </html>
