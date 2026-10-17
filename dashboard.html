@@ -16,7 +16,7 @@
 
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Futuristic Live Smart Revenue & Expense Bar Styles */
+        /* Futuristic Live Smart Revenue, Expense & Credit Bar Styles */
         .smart-revenue-bar {
             display: flex;
             justify-content: space-between;
@@ -46,14 +46,41 @@
         }
 
         .stat-value {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 900;
             font-family: monospace;
         }
 
         .stat-game { color: #2a9d8f; text-shadow: 0 0 10px rgba(42, 157, 143, 0.5); }
         .stat-canteen { color: #e76f51; text-shadow: 0 0 10px rgba(231, 111, 81, 0.5); }
+        .stat-expense { color: #ff4d4d; text-shadow: 0 0 10px rgba(255, 77, 77, 0.5); }
+        .stat-credit { color: #f4a261; text-shadow: 0 0 10px rgba(244, 162, 97, 0.5); }
         .stat-profit { color: #d4af37; text-shadow: 0 0 12px rgba(212, 175, 55, 0.7); }
+
+        /* Expense & Credit Action Buttons */
+        .management-action-bar {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 2rem 0 2rem;
+            flex-wrap: wrap;
+        }
+        .btn-action-custom {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--gold-primary);
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .btn-action-custom:hover {
+            border-color: var(--gold-primary);
+            background: rgba(212, 175, 55, 0.1);
+        }
 
         /* Dynamic Neon Glow Table Cards Styling */
         .snooker-table-card {
@@ -68,13 +95,13 @@
             justify-content: space-between;
         }
 
-        /* 1. Free Table Status - Green Glow Ring */
+        /* Free Table Status - Green Glow Ring */
         .snooker-table-card.status-free {
             border: 2px solid #2a9d8f;
             box-shadow: 0 0 15px rgba(42, 157, 143, 0.4), inset 0 0 10px rgba(42, 157, 143, 0.15);
         }
 
-        /* 2. Active Game Status - Red Pulse Ring */
+        /* Active Game Status - Red Pulse Ring */
         .snooker-table-card.status-active {
             border: 2px solid #e63946;
             animation: neonRedPulse 1.8s infinite alternate;
@@ -85,7 +112,7 @@
             100% { box-shadow: 0 0 25px rgba(230, 57, 70, 0.8), inset 0 0 18px rgba(230, 57, 70, 0.35); }
         }
 
-        /* 3. Ending Soon (Last Mins) - Gold Warning Glow */
+        /* Ending Soon - Gold Warning Glow Ring */
         .snooker-table-card.status-ending {
             border: 2px solid #d4af37;
             animation: neonGoldGlow 1.2s infinite alternate;
@@ -430,7 +457,7 @@
             color: var(--text-muted);
             text-transform: uppercase;
         }
-        .form-select, .form-input-file {
+        .form-select, .form-input-file, .form-input {
             width: 100%;
             padding: 0.75rem;
             background-color: #121212;
@@ -476,7 +503,7 @@
                 background-color: var(--bg-card);
             }
             .sidebar.active { left: 0; }
-            .shift-status-panel, .status-overview-panel, .smart-revenue-bar {
+            .shift-status-panel, .status-overview-panel, .smart-revenue-bar, .management-action-bar {
                 margin: 1rem 1rem 0 1rem;
                 padding: 1rem;
             }
@@ -533,10 +560,10 @@
                 </div>
             </header>
 
-            <!-- LIVE SMART REVENUE & EXPENSE BAR -->
+            <!-- LIVE SMART REVENUE, EXPENSES & CREDIT BAR -->
             <div class="smart-revenue-bar">
                 <div class="stat-item">
-                    <span class="stat-label">🎮 Today's Game Income</span>
+                    <span class="stat-label">🎮 Game Income</span>
                     <span class="stat-value stat-game" id="game-income-display">Rs. 0</span>
                 </div>
                 <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
@@ -546,9 +573,25 @@
                 </div>
                 <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
                 <div class="stat-item">
-                    <span class="stat-label">💰 Net Shift Profit</span>
+                    <span class="stat-label">📉 Total Expenses</span>
+                    <span class="stat-value stat-expense" id="total-expense-display">Rs. 0</span>
+                </div>
+                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
+                <div class="stat-item">
+                    <span class="stat-label">🤝 Total Udhar (Credit)</span>
+                    <span class="stat-value stat-credit" id="total-credit-display">Rs. 0</span>
+                </div>
+                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
+                <div class="stat-item">
+                    <span class="stat-label">💰 Net Profit</span>
                     <span class="stat-value stat-profit" id="net-profit-display">Rs. 0</span>
                 </div>
+            </div>
+
+            <!-- Action Buttons Bar for Expenses & Credit Management -->
+            <div class="management-action-bar">
+                <button class="btn-action-custom" id="open-expense-modal">💸 Add Expense (Kharcha)</button>
+                <button class="btn-action-custom" id="open-credit-modal">🤝 Add Udhar / Credit Entry</button>
             </div>
 
             <!-- Shift Status Control Panel (Open / Close Snooker) -->
@@ -598,6 +641,44 @@
         </div>
         <div id="drawer-reports-list" style="flex: 1; overflow-y: auto;">
             <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No shift sales reports saved yet.</p>
+        </div>
+    </div>
+
+    <!-- ADD EXPENSE MODAL -->
+    <div id="expense-modal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" id="expense-modal-close">&times;</button>
+            <h3 style="color: var(--gold-primary); margin-top: 0;">Add Club Expense (Kharcha)</h3>
+            <form id="expense-form">
+                <div class="form-group">
+                    <label class="form-label">Expense Reason / Title</label>
+                    <input type="text" id="expense-title" class="form-input" placeholder="e.g. Electricity Bill, Tea Stock, Repairs" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount (Rs.)</label>
+                    <input type="number" id="expense-amount" class="form-input" placeholder="500" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Expense</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADD CREDIT / UDHAR MODAL -->
+    <div id="credit-modal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" id="credit-modal-close">&times;</button>
+            <h3 style="color: var(--gold-primary); margin-top: 0;">Add Udhar / Credit Entry</h3>
+            <form id="credit-form">
+                <div class="form-group">
+                    <label class="form-label">Customer / Player Name</label>
+                    <input type="text" id="credit-name" class="form-input" placeholder="e.g. Ali Khan" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Udhar Amount (Rs.)</label>
+                    <input type="number" id="credit-amount" class="form-input" placeholder="300" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Udhar Record</button>
+            </form>
         </div>
     </div>
 
@@ -712,6 +793,48 @@
                 reportsDrawer.classList.remove('active');
             });
 
+            // Expense & Credit Modals Controls
+            const expenseModal = document.getElementById('expense-modal');
+            const creditModal = document.getElementById('credit-modal');
+
+            document.getElementById('open-expense-modal').addEventListener('click', () => expenseModal.classList.add('active'));
+            document.getElementById('expense-modal-close').addEventListener('click', () => expenseModal.classList.remove('active'));
+
+            document.getElementById('open-credit-modal').addEventListener('click', () => creditModal.classList.add('active'));
+            document.getElementById('credit-modal-close').addEventListener('click', () => creditModal.classList.remove('active'));
+
+            // Save Expense Handler
+            document.getElementById('expense-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                let title = document.getElementById('expense-title').value;
+                let amount = parseFloat(document.getElementById('expense-amount').value || 0);
+
+                let expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
+                expenses.push({ title, amount, time: new Date().toLocaleTimeString() });
+                localStorage.setItem('cuedesk_expenses', JSON.stringify(expenses));
+
+                document.getElementById('expense-form').reset();
+                expenseModal.classList.remove('active');
+                updateSmartRevenueBar();
+                alert('Expense saved successfully!');
+            });
+
+            // Save Credit / Udhar Handler
+            document.getElementById('credit-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                let name = document.getElementById('credit-name').value;
+                let amount = parseFloat(document.getElementById('credit-amount').value || 0);
+
+                let credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
+                credits.push({ name, amount, time: new Date().toLocaleTimeString() });
+                localStorage.setItem('cuedesk_credits', JSON.stringify(credits));
+
+                document.getElementById('credit-form').reset();
+                creditModal.classList.remove('active');
+                updateSmartRevenueBar();
+                alert(`Udhar recorded for ${name}!`);
+            });
+
             await fetchSupabaseClubProfile();
 
             const timerIntervals = {};
@@ -740,7 +863,7 @@
                 }
             });
 
-            // LIVE SMART REVENUE & EXPENSE BAR UPDATER
+            // LIVE SMART REVENUE, EXPENSES & NET PROFIT CALCULATOR BAR
             function updateSmartRevenueBar() {
                 const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
                 let totalGameIncome = 0;
@@ -748,10 +871,24 @@
                     totalGameIncome += parseFloat(s.bill || 0);
                 });
                 let canteenSales = 3200; // Canteen / Snacks income baseline
-                let netProfit = totalGameIncome + canteenSales;
+
+                // Calculate Expenses
+                const expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
+                let totalExpense = 0;
+                expenses.forEach(ex => totalExpense += parseFloat(ex.amount || 0));
+
+                // Calculate Credits (Udhar)
+                const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
+                let totalCredit = 0;
+                credits.forEach(cr => totalCredit += parseFloat(cr.amount || 0));
+
+                // Net Profit Calculation: (Game Income + Canteen) - Expenses
+                let netProfit = (totalGameIncome + canteenSales) - totalExpense;
 
                 document.getElementById('game-income-display').textContent = `Rs. ${totalGameIncome.toLocaleString()}`;
                 document.getElementById('canteen-income-display').textContent = `Rs. ${canteenSales.toLocaleString()}`;
+                document.getElementById('total-expense-display').textContent = `Rs. ${totalExpense.toLocaleString()}`;
+                document.getElementById('total-credit-display').textContent = `Rs. ${totalCredit.toLocaleString()}`;
                 document.getElementById('net-profit-display').textContent = `Rs. ${netProfit.toLocaleString()}`;
             }
             updateSmartRevenueBar();
