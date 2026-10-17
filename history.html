@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Session History & Revenue - CUEDESK</title>
+    <title>Session History & Sales - CUEDESK</title>
 
-    <!-- Supabase Module Import Map -->
     <script type="importmap">
       {
         "imports": {
@@ -32,6 +31,18 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
+        .current-date-badge {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold-primary);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
         .date-filter-box {
             display: flex;
             align-items: center;
@@ -40,6 +51,7 @@
             padding: 0.5rem 1rem;
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
+            flex-wrap: wrap;
         }
         .date-input {
             background: transparent;
@@ -50,10 +62,6 @@
             outline: none;
             cursor: pointer;
         }
-        .date-input::-webkit-calendar-picker-indicator {
-            filter: invert(0.8) sepia(100%) saturate(500%) hue-rotate(5deg);
-            cursor: pointer;
-        }
         .history-table-wrapper {
             overflow-x: auto;
         }
@@ -61,7 +69,7 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            min-width: 600px;
+            min-width: 650px;
         }
         .history-table th, .history-table td {
             padding: 0.85rem 1rem;
@@ -73,78 +81,62 @@
             text-transform: uppercase;
             font-size: 0.85rem;
         }
-        /* Date Divider Row Style */
         .date-divider-row td {
-            background: rgba(212, 175, 55, 0.08);
-            color: var(--gold-light);
+            background: rgba(212, 175, 55, 0.12) !important;
+            color: var(--gold-primary) !important;
             font-weight: bold;
             font-size: 0.95rem;
-            border-top: 2px solid var(--border-color);
-            border-bottom: 2px solid var(--border-color);
+            border-top: 2px solid var(--gold-primary);
+            border-bottom: 2px solid var(--gold-primary);
             padding: 0.75rem 1rem;
         }
-        .total-badge {
-            background: rgba(212,175,55,0.15);
-            color: var(--gold-light);
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-md);
+        .payment-pill {
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 0.8rem;
         }
-        .clear-btn {
-            background: rgba(231, 111, 81, 0.2);
-            color: #e76f51;
-            border: 1px solid rgba(231, 111, 81, 0.4);
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-weight: 600;
+        .pay-cash {
+            background: rgba(42, 157, 143, 0.2);
+            color: #2a9d8f;
+            border: 1px solid rgba(42, 157, 143, 0.4);
         }
-        .clear-btn:hover { background: #e76f51; color: #fff; }
-
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: 1px solid var(--border-color);
-            color: var(--gold-primary);
-            font-size: 1.5rem;
-            padding: 0.3rem 0.75rem;
-            border-radius: var(--radius-md);
+        .pay-online {
+            background: rgba(0, 180, 216, 0.2);
+            color: #00b4d8;
+            border: 1px solid rgba(0, 180, 216, 0.4);
+        }
+        .view-slip-btn {
+            background: var(--gold-primary);
+            color: #000;
+            border: none;
+            padding: 0.35rem 0.75rem;
+            font-weight: bold;
+            border-radius: 4px;
             cursor: pointer;
         }
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 99;
-        }
-        .sidebar-overlay.active { display: block; }
 
-        @media (max-width: 768px) {
-            .mobile-menu-toggle { display: block; }
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: -260px;
-                width: 250px;
-                height: 100vh;
-                z-index: 100;
-                transition: left 0.3s ease;
-                background-color: var(--bg-card);
-            }
-            .sidebar.active { left: 0; }
-            .history-card { margin: 1rem; padding: 1rem; }
+        /* Image Slip Modal */
+        .slip-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .slip-modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .slip-modal-card {
+            background: var(--bg-card); border: 1px solid var(--gold-primary);
+            border-radius: 12px; padding: 1.5rem; max-width: 500px; width: 90%;
+            text-align: center; position: relative;
+        }
+        .slip-modal-img {
+            max-width: 100%; max-height: 70vh; border-radius: 8px; margin-top: 1rem;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
     </style>
 </head>
 <body>
     <div class="app-layout">
-        <div id="sidebar-overlay" class="sidebar-overlay"></div>
-
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <h1 class="brand-title">CUEDESK</h1>
@@ -160,32 +152,31 @@
 
         <div class="main-content">
             <header class="top-header">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <button id="mobile-menu-toggle" class="mobile-menu-toggle">☰</button>
-                    <h2 class="header-title" style="font-size: 1.2rem;">Session History & Sales</h2>
-                </div>
+                <h2 class="header-title" style="font-size: 1.2rem;">Session History & Verification</h2>
                 <div class="owner-profile">
                     <div class="profile-info" style="text-align: right;">
                         <span class="profile-name" id="display-club-name" style="color: var(--gold-primary); font-weight: bold;">Loading...</span>
                         <span class="profile-role">Admin</span>
                     </div>
-                    <div class="profile-avatar" id="display-club-avatar">SC</div>
                 </div>
             </header>
 
             <main>
                 <div class="history-card">
+                    <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                        <div class="current-date-badge" id="today-display-badge">📅 Loading Date...</div>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">24-Hour Sync & Payment Slips</span>
+                    </div>
+
                     <div class="history-header">
-                        <!-- Date Filter Control -->
                         <div class="date-filter-box">
-                            <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Select Date:</span>
+                            <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Filter Date:</span>
                             <input type="date" id="history-date-picker" class="date-input">
-                            <button id="reset-date-btn" class="table-control-btn" style="background: #2a2a2a; color: #fff; font-size: 0.75rem; padding: 0.3rem 0.6rem;">Show All</button>
+                            <button id="reset-date-btn" class="table-control-btn" style="background: var(--gold-primary); color: #000; font-weight: bold; font-size: 0.8rem; padding: 0.35rem 0.75rem; border: none; border-radius: 4px; cursor: pointer;">Show All Dates</button>
                         </div>
 
-                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                            <span class="total-badge" id="total-revenue">Revenue: Rs. 0</span>
-                            <button class="clear-btn" id="clear-history-btn">Clear All History</button>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <span class="total-badge" id="total-revenue" style="background: rgba(212,175,55,0.15); color: var(--gold-light); padding: 0.5rem 1rem; border-radius: var(--radius-md); font-weight: bold;">Revenue: Rs. 0</span>
                         </div>
                     </div>
 
@@ -197,17 +188,28 @@
                                     <th>Game Type</th>
                                     <th>Format</th>
                                     <th>Duration</th>
-                                    <th>Total Bill</th>
+                                    <th>Bill</th>
+                                    <th>Payment Mode</th>
+                                    <th>Slip Receipt</th>
                                     <th>Time Ended</th>
                                 </tr>
                             </thead>
                             <tbody id="history-rows">
-                                <tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Loading sessions...</td></tr>
+                                <tr><td colspan="8" style="text-align:center; color: var(--text-muted);">Loading sessions...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <!-- Receipt Slip Viewer Modal -->
+    <div id="slip-modal" class="slip-modal-overlay">
+        <div class="slip-modal-card">
+            <button id="close-slip-modal" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            <h3 style="color: var(--gold-primary); margin: 0;">Transaction Receipt Slip</h3>
+            <img id="slip-modal-image" class="slip-modal-img" src="" alt="Payment Receipt">
         </div>
     </div>
 
@@ -218,85 +220,33 @@
         let allSessions = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Mobile Menu
-            const mobileToggle = document.getElementById('mobile-menu-toggle');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            const now = new Date();
+            const todayFormatted = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('today-display-badge').innerHTML = `📅 Today: <strong>${todayFormatted}</strong>`;
 
-            if (mobileToggle && sidebar && sidebarOverlay) {
-                mobileToggle.addEventListener('click', () => {
-                    sidebar.classList.toggle('active');
-                    sidebarOverlay.classList.toggle('active');
-                });
-                sidebarOverlay.addEventListener('click', () => {
-                    sidebar.classList.remove('active');
-                    sidebarOverlay.classList.remove('active');
-                });
-            }
-
-            // Set default date picker value to Today
             const datePicker = document.getElementById('history-date-picker');
-            const todayStr = new Date().toISOString().split('T')[0];
-            datePicker.value = todayStr;
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            datePicker.value = `${year}-${month}-${day}`;
 
-            // Load Club Metadata
-            let clubName = localStorage.getItem('cuedesk_club_name') || 'Snooker Club';
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user && user.user_metadata && user.user_metadata.club_name) {
-                    clubName = user.user_metadata.club_name;
-                }
-            } catch (e) {}
-            document.getElementById('display-club-name').textContent = clubName;
-            const initials = clubName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-            document.getElementById('display-club-avatar').textContent = initials || 'SC';
-
-            // Initial Fetch & Render
             await fetchAllSessions();
 
-            // Date Picker Event Listeners
             datePicker.addEventListener('change', () => filterAndRenderHistory(datePicker.value));
             document.getElementById('reset-date-btn').addEventListener('click', () => {
                 datePicker.value = '';
                 filterAndRenderHistory('');
             });
+
+            document.getElementById('close-slip-modal').addEventListener('click', () => {
+                document.getElementById('slip-modal').classList.remove('active');
+            });
         });
 
         async function fetchAllSessions() {
-            allSessions = [];
-
-            // 1. Fetch Cloud Sessions from Supabase
-            try {
-                const { data, error } = await supabase.from('game_sessions').select('*').order('created_at', { ascending: false });
-                if (!error && data && data.length > 0) {
-                    allSessions = data.map(item => ({
-                        id: item.id,
-                        tableId: item.table_id,
-                        gameType: item.game_type,
-                        format: item.game_format || 'N/A',
-                        duration: `${item.duration_minutes} mins`,
-                        bill: parseFloat(item.total_bill),
-                        createdAt: new Date(item.created_at)
-                    }));
-                }
-            } catch (e) {}
-
-            // 2. Local Storage Fallback
-            const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
-            if (allSessions.length === 0 && localHistory.length > 0) {
-                allSessions = localHistory.map(item => ({
-                    tableId: item.tableId,
-                    gameType: item.gameType,
-                    format: item.format,
-                    duration: item.duration,
-                    bill: parseFloat(item.bill),
-                    createdAt: item.timestamp ? new Date(item.timestamp) : new Date()
-                }));
-            }
-
-            // Filter today's sales by default
-            const todayStr = document.getElementById('history-date-picker').value;
-            filterAndRenderHistory(todayStr);
+            allSessions = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
+            const activePickerDate = document.getElementById('history-date-picker').value;
+            filterAndRenderHistory(activePickerDate);
         }
 
         function filterAndRenderHistory(selectedDate) {
@@ -305,40 +255,31 @@
 
             let filtered = allSessions;
 
-            // Filter by Date if selected
             if (selectedDate) {
                 filtered = allSessions.filter(s => {
-                    const sessionDateStr = s.createdAt.toISOString().split('T')[0];
-                    return sessionDateStr === selectedDate;
+                    const d = s.timestamp ? new Date(s.timestamp) : new Date();
+                    const sessionYear = d.getFullYear();
+                    const sessionMonth = String(d.getMonth() + 1).padStart(2, '0');
+                    const sessionDay = String(d.getDate()).padStart(2, '0');
+                    return `${sessionYear}-${sessionMonth}-${sessionDay}` === selectedDate;
                 });
             }
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No sessions recorded for ${selectedDate || 'this period'}.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding: 2rem;">No sessions recorded for ${selectedDate || 'selected view'}.</td></tr>`;
                 totalElem.textContent = `Revenue: Rs. 0`;
                 return;
             }
 
             tbody.innerHTML = '';
             let totalRevenue = 0;
-            let lastDateHeading = '';
 
-            filtered.forEach(session => {
-                totalRevenue += session.bill;
+            filtered.forEach((session, index) => {
+                totalRevenue += parseFloat(session.bill || 0);
 
-                // Format Dates & Times
-                const dateHeading = session.createdAt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-                const timeString = session.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                // Add Date Separator Row when date changes
-                if (!selectedDate && dateHeading !== lastDateHeading) {
-                    tbody.innerHTML += `
-                        <tr class="date-divider-row">
-                            <td colspan="6">📅 ${dateHeading}</td>
-                        </tr>
-                    `;
-                    lastDateHeading = dateHeading;
-                }
+                const payMode = session.paymentMode === 'ONLINE' ? '<span class="payment-pill pay-online">💳 ONLINE</span>' : '<span class="payment-pill pay-cash">💵 CASH</span>';
+                
+                const slipAction = session.slipImage ? `<button class="view-slip-btn" onclick="openSlipViewer('${index}')">📷 View Slip</button>` : 'N/A';
 
                 tbody.innerHTML += `
                     <tr>
@@ -347,28 +288,23 @@
                         <td>${session.format}</td>
                         <td>${session.duration}</td>
                         <td style="color: var(--gold-primary); font-weight: bold;">Rs. ${session.bill}</td>
-                        <td>${timeString}</td>
+                        <td>${payMode}</td>
+                        <td>${slipAction}</td>
+                        <td>${session.time}</td>
                     </tr>
                 `;
             });
 
-            totalElem.textContent = selectedDate ? `Selected Date Revenue: Rs. ${totalRevenue}` : `Total Revenue: Rs. ${totalRevenue}`;
+            totalElem.textContent = selectedDate ? `Selected Revenue: Rs. ${totalRevenue}` : `Total Revenue: Rs. ${totalRevenue}`;
         }
 
-        // Clear All History Button
-        document.getElementById('clear-history-btn').addEventListener('click', async () => {
-            if (confirm('Are you sure you want to clear all session history?')) {
-                localStorage.removeItem('bare_tallies_history');
-
-                try {
-                    const { error } = await supabase.from('game_sessions').delete().neq('table_id', 0);
-                    if (error) throw error;
-                } catch (err) {}
-
-                await fetchAllSessions();
-                alert('All history cleared successfully!');
+        window.openSlipViewer = function(index) {
+            const session = allSessions[index];
+            if (session && session.slipImage) {
+                document.getElementById('slip-modal-image').src = session.slipImage;
+                document.getElementById('slip-modal').classList.add('active');
             }
-        });
+        };
     </script>
 </body>
 </html>
