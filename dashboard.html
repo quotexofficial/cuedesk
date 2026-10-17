@@ -219,7 +219,6 @@
                 <div class="overview-header">
                     <h3 class="overview-title">Table Live Status</h3>
                     
-                    <!-- Table Management Quick Controls -->
                     <div class="overview-actions">
                         <button class="table-control-btn btn-add-table" id="btn-add-table">➕ Add Table</button>
                         <button class="table-control-btn btn-remove-table" id="btn-remove-table">➖ Remove Table</button>
@@ -231,12 +230,10 @@
                     </div>
                 </div>
                 
-                <!-- Dynamic Live Indicators Grid -->
                 <div class="table-indicators-grid" id="indicators-container"></div>
             </section>
 
             <main style="padding: 0; flex: 1;">
-                <!-- Dynamic Tables Grid -->
                 <div class="tables-grid" id="tables-container"></div>
             </main>
         </div>
@@ -301,8 +298,8 @@
             const tablesContainer = document.getElementById('tables-container');
             const indicatorsContainer = document.getElementById('indicators-container');
 
-            // Image URL for all Snooker Tables
-            const snookerTableImage = "https://images.wallpapers.com/wallpapers/snooker-table-perspective-shot-qlzbizlheoq7yoha.jpg";
+            // Reliable Direct Snooker Table Image Link
+            const snookerTableImage = "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80";
 
             function getTotalTables() {
                 return parseInt(localStorage.getItem('cuedesk_total_tables') || '5');
@@ -344,7 +341,6 @@
                 indicatorsContainer.innerHTML = '';
 
                 for (let i = 1; i <= total; i++) {
-                    // Indicator Item
                     const indDiv = document.createElement('div');
                     indDiv.className = 'table-indicator-item';
                     indDiv.id = `indicator-item-${i}`;
@@ -354,7 +350,6 @@
                     `;
                     indicatorsContainer.appendChild(indDiv);
 
-                    // Table Card
                     const cardDiv = document.createElement('div');
                     cardDiv.className = 'snooker-table-card';
                     cardDiv.setAttribute('data-table-id', i);
