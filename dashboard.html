@@ -301,7 +301,9 @@
             const tablesContainer = document.getElementById('tables-container');
             const indicatorsContainer = document.getElementById('indicators-container');
 
-            // 1. Get Total Tables (Default to 5 if not set)
+            // Image URL for all Snooker Tables
+            const snookerTableImage = "https://images.wallpapers.com/wallpapers/snooker-table-perspective-shot-qlzbizlheoq7yoha.jpg";
+
             function getTotalTables() {
                 return parseInt(localStorage.getItem('cuedesk_total_tables') || '5');
             }
@@ -336,7 +338,6 @@
                 return { ...defaultRates, ...saved };
             }
 
-            // 2. Dynamic Rendering of Tables & Indicators
             function renderTablesUI() {
                 const total = getTotalTables();
                 tablesContainer.innerHTML = '';
@@ -363,7 +364,7 @@
                             <span class="badge badge-available" id="status-badge-${i}">Available</span>
                         </div>
                         <div class="table-image-wrapper">
-                            <img src="https://image.made-in-china.com/202f0j00WZfqUNLnEgrm/Snooker-Pool-Table-Billiard-Table-with-Precise-Pockets-Smooth-Cloth.webp" alt="Snooker Table ${i}">
+                            <img src="${snookerTableImage}" alt="Snooker Table ${i}">
                         </div>
                         <div class="card-footer-info">
                             <div class="timer-display" id="timer-${i}">00:00:00</div>
@@ -373,7 +374,6 @@
                     tablesContainer.appendChild(cardDiv);
                 }
 
-                // Re-bind Event Listeners
                 document.querySelectorAll('.manage-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const tableId = btn.getAttribute('data-table');
@@ -384,7 +384,6 @@
                 initPersistentSessions();
             }
 
-            // 3. Add & Remove Table Handlers
             document.getElementById('btn-add-table').addEventListener('click', () => {
                 let current = getTotalTables();
                 if (current >= 20) {
@@ -589,7 +588,6 @@
                 closeManageModal();
             });
 
-            // Initial Build
             renderTablesUI();
         });
     </script>
