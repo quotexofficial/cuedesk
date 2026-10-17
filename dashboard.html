@@ -122,7 +122,6 @@
             box-shadow: 0 0 8px var(--badge-playing);
         }
 
-        /* 100% Guaranteed Custom Snooker Table Graphic */
         .snooker-table-visual {
             width: 100%;
             height: 160px;
@@ -217,7 +216,7 @@
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
-            width: 100%;
+            width: 90%;
             max-width: 480px;
             padding: 2rem;
             box-shadow: 0 12px 32px rgba(0,0,0,0.8);
@@ -250,10 +249,62 @@
             color: var(--text-main);
             font-size: 1rem;
         }
+
+        /* Mobile Responsive Sidebar Fixes */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--gold-primary);
+            font-size: 1.5rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 99;
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -260px;
+                width: 250px;
+                height: 100vh;
+                z-index: 100;
+                transition: left 0.3s ease;
+                background-color: var(--bg-card);
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            .status-overview-panel {
+                margin: 1rem 1rem 0 1rem;
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="app-layout">
+        <!-- Overlay for Mobile Sidebar -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
         <!-- Sidebar Navigation -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
@@ -273,12 +324,12 @@
             <header class="top-header">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <button id="mobile-menu-toggle" class="mobile-menu-toggle">☰</button>
-                    <h2 class="header-title">Tables & Games</h2>
+                    <h2 class="header-title" style="font-size: 1.2rem;">Tables & Games</h2>
                 </div>
                 <div class="owner-profile">
                     <div class="profile-info" style="text-align: right;">
-                        <span class="profile-name" id="display-club-name" style="color: var(--gold-primary); font-weight: bold;">Loading Club...</span>
-                        <span class="profile-role">Club Administrator</span>
+                        <span class="profile-name" id="display-club-name" style="color: var(--gold-primary); font-weight: bold;">Loading...</span>
+                        <span class="profile-role">Admin</span>
                     </div>
                     <div class="profile-avatar" id="display-club-avatar">SC</div>
                 </div>
@@ -353,6 +404,23 @@
         import { supabase } from './js/supabase.js';
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Setup Mobile Navigation Menu
+            const mobileToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            if (mobileToggle && sidebar && sidebarOverlay) {
+                mobileToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                    sidebarOverlay.classList.toggle('active');
+                });
+
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+
             await fetchSupabaseClubProfile();
 
             const timerIntervals = {};
@@ -426,7 +494,6 @@
                             <span class="badge badge-available" id="status-badge-${i}">Available</span>
                         </div>
                         <div class="table-image-wrapper">
-                            <!-- Authentic Snooker Table Graphic -->
                             <div class="snooker-table-visual">
                                 <div class="pocket p-tl"></div>
                                 <div class="pocket p-tr"></div>
