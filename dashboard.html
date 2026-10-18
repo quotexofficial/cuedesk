@@ -16,7 +16,6 @@
 
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Expense & Credit Action Buttons */
         .management-action-bar {
             display: flex;
             gap: 1rem;
@@ -41,7 +40,6 @@
             background: rgba(212, 175, 55, 0.1);
         }
 
-        /* Dynamic Neon Glow Table Cards Styling */
         .snooker-table-card {
             background: var(--bg-card);
             border-radius: var(--radius-lg);
@@ -54,13 +52,11 @@
             justify-content: space-between;
         }
 
-        /* Free Table Status - Green Glow Ring */
         .snooker-table-card.status-free {
             border: 2px solid #2a9d8f;
             box-shadow: 0 0 15px rgba(42, 157, 143, 0.4), inset 0 0 10px rgba(42, 157, 143, 0.15);
         }
 
-        /* Active Game Status - Red Pulse Ring */
         .snooker-table-card.status-active {
             border: 2px solid #e63946;
             animation: neonRedPulse 1.8s infinite alternate;
@@ -71,7 +67,6 @@
             100% { box-shadow: 0 0 25px rgba(230, 57, 70, 0.8), inset 0 0 18px rgba(230, 57, 70, 0.35); }
         }
 
-        /* Ending Soon - Gold Warning Glow Ring */
         .snooker-table-card.status-ending {
             border: 2px solid #d4af37;
             animation: neonGoldGlow 1.2s infinite alternate;
@@ -334,7 +329,6 @@
             color: var(--gold-primary);
         }
 
-        /* Shift Reports History Panel / Drawer */
         .reports-drawer {
             position: fixed;
             top: 0;
@@ -367,7 +361,6 @@
             margin-bottom: 0.85rem;
         }
 
-        /* Modal Styles */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -468,7 +461,6 @@
             }
         }
 
-        /* Printable PDF Styling Rules */
         @media print {
             body * { visibility: hidden; }
             #printable-sales-report, #printable-sales-report * { visibility: visible; }
@@ -483,7 +475,6 @@
             }
         }
 
-        /* CUEDESK futuristic finance workspace */
         .finance-workspace { margin: 1.5rem 2rem 2rem; padding: 1.5rem; border: 1px solid rgba(57,217,168,.2); border-radius: var(--radius-lg); background: linear-gradient(145deg, rgba(13,21,30,.98), rgba(10,13,20,.98)); box-shadow: 0 16px 40px rgba(0,0,0,.2); }
         .finance-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
         .finance-eyebrow { color:#39d9a8; text-transform:uppercase; letter-spacing:2px; font-size:.72rem; font-weight:800; margin-bottom:.45rem; }
@@ -496,15 +487,12 @@
         .btn-action-custom { border-color:rgba(57,217,168,.24); background:rgba(57,217,168,.055); color:#67e7bd; padding:.8rem 1rem; }
         .btn-action-custom:hover { border-color:#39d9a8; background:rgba(57,217,168,.12); transform:translateY(-1px); }
         #expense-list > div, #credit-list > div, #sale-list > div { border:1px solid rgba(255,255,255,.055); border-radius:10px; padding:.85rem !important; margin:.55rem 0; background:rgba(255,255,255,.025); }
-        @media (max-width: 700px) { .finance-workspace { margin-left:1rem; margin-right:1rem; padding:1rem; } .management-action-bar { display:grid; grid-template-columns:1fr; } .btn-action-custom { width:100%; } }
-
     </style>
 </head>
 <body>
     <div class="app-layout">
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-        <!-- Sidebar Navigation -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <h1 class="brand-title">CUEDESK</h1>
@@ -520,7 +508,6 @@
             </nav>
         </aside>
 
-        <!-- Main Content Wrapper -->
         <div class="main-content">
             <header class="top-header">
                 <div style="display: flex; align-items: center; gap: 1rem;">
@@ -536,7 +523,6 @@
                 </div>
             </header>
 
-            <!-- Shift Status Control Panel (Open / Close Snooker) -->
             <section class="shift-status-panel">
                 <div class="shift-info">
                     <span id="shift-badge-status" class="shift-badge shift-closed">Club Closed</span>
@@ -550,7 +536,6 @@
                 </div>
             </section>
 
-            <!-- Table Status Overview Section -->
             <section class="status-overview-panel">
                 <div class="overview-header">
                     <h3 class="overview-title">Table Live Status</h3>
@@ -573,7 +558,6 @@
                 <div class="tables-grid" id="tables-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;"></div>
             </main>
 
-            <!-- Dedicated finance management workspace: edit records here. -->
             <section class="finance-workspace" id="finance-manager">
                 <div class="finance-heading">
                     <div>
@@ -582,7 +566,7 @@
                         <p class="finance-subtitle">Manage expenses, customer credits and additional sales in one place.</p>
                     </div>
                     <div style="display:flex;align-items:center;gap:.5rem;color:#39d9a8;font-size:.78rem;font-weight:700;border:1px solid rgba(57,217,168,.22);background:rgba(57,217,168,.06);padding:.55rem .75rem;border-radius:999px;white-space:nowrap;">
-                        <span style="width:7px;height:7px;background:#39d9a8;border-radius:50%;box-shadow:0 0 10px #39d9a8;"></span> LIVE CLOUD SYNC
+                        <span style="width:7px;height:7px;background:#39d9a8;border-radius:50%;box-shadow:0 0 10px #39d9a8;"></span> 100% REAL-TIME CLOUD SYNC
                     </div>
                 </div>
                 <div class="management-action-bar">
@@ -606,7 +590,6 @@
         </div>
     </div>
 
-    <!-- Reports Drawer Panel -->
     <div id="reports-drawer" class="reports-drawer">
         <div class="drawer-header">
             <h3 style="color: var(--gold-primary);">Shift Sales Reports</h3>
@@ -617,7 +600,6 @@
         </div>
     </div>
 
-    <!-- ADD EXPENSE MODAL -->
     <div id="expense-modal" class="modal-overlay">
         <div class="modal-card">
             <button class="modal-close" id="expense-modal-close">&times;</button>
@@ -636,7 +618,6 @@
         </div>
     </div>
 
-    <!-- ADD CREDIT / UDHAR MODAL -->
     <div id="credit-modal" class="modal-overlay">
         <div class="modal-card">
             <button class="modal-close" id="credit-modal-close">&times;</button>
@@ -655,7 +636,6 @@
         </div>
     </div>
 
-    <!-- ADD OTHER SALE MODAL -->
     <div id="sale-modal" class="modal-overlay">
         <div class="modal-card">
             <button class="modal-close" id="sale-modal-close">&times;</button>
@@ -668,7 +648,6 @@
         </div>
     </div>
 
-    <!-- Hidden Printable Sales PDF Sheet -->
     <div id="printable-sales-report" style="display: none;">
         <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
             <h1 style="margin: 0; font-size: 24px; color: #000;" id="pdf-club-title">CUEDESK SNOOKER CLUB</h1>
@@ -695,7 +674,6 @@
         </div>
     </div>
 
-    <!-- Manage Game Modal -->
     <div id="manage-modal" class="modal-overlay">
         <div class="modal-card">
             <button class="modal-close" id="modal-close-btn">&times;</button>
@@ -722,7 +700,6 @@
                     </select>
                 </div>
 
-                <!-- Payment Selection Fields (Shows when Ending Game) -->
                 <div class="form-group" id="payment-mode-group" style="display: none;">
                     <label class="form-label">Payment Mode</label>
                     <select id="payment-mode-select" class="form-select">
@@ -749,7 +726,6 @@
         </div>
     </div>
 
-    <!-- Slip Preview Modal -->
     <div id="slip-modal" class="modal-overlay">
         <div class="modal-card" style="text-align: center;">
             <button class="modal-close" id="slip-modal-close">&times;</button>
@@ -821,6 +797,31 @@
             const saleModal = document.getElementById('sale-modal');
             document.getElementById('open-sale-modal').addEventListener('click', () => saleModal.classList.add('active'));
             document.getElementById('sale-modal-close').addEventListener('click', () => saleModal.classList.remove('active'));
+
+            // CLOUD STATE SYNC HELPERS (Global Club State Table)
+            async function getClubState() {
+                try {
+                    const { data, error } = await supabase.from('club_state').select('*').eq('user_id', currentUser.id).maybeSingle();
+                    if (data) return data;
+                    if (!data) {
+                        // Initialize default state if none exists
+                        const defaultState = { user_id: currentUser.id, total_tables: 5, shift_open: false, shift_start_time: null, active_sessions: {} };
+                        await supabase.from('club_state').insert([defaultState]);
+                        return defaultState;
+                    }
+                } catch (err) {
+                    console.error('Error fetching club state:', err);
+                }
+                return { total_tables: 5, shift_open: false, shift_start_time: null, active_sessions: {} };
+            }
+
+            async function updateClubState(updates) {
+                try {
+                    await supabase.from('club_state').update(updates).eq('user_id', currentUser.id);
+                } catch (err) {
+                    console.error('Error updating club state:', err);
+                }
+            }
 
             document.getElementById('expense-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -998,11 +999,13 @@
 
             await renderFinanceLists();
 
-            // Real-time synchronization subscription for multi-device live updates
+            // Real-time synchronization subscription for multi-device live updates across ALL tables
             try {
                 supabase.channel('public-db-changes')
                     .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
                         await renderFinanceLists();
+                        await renderTablesUI();
+                        await updateShiftUI();
                     })
                     .subscribe();
             } catch (err) {
@@ -1014,13 +1017,13 @@
             const shiftStartText = document.getElementById('shift-start-time-text');
             const shiftActionBtn = document.getElementById('shift-action-btn');
 
-            function updateShiftUI() {
-                const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
-                if (activeShift && activeShift.isOpen) {
+            async function updateShiftUI() {
+                const state = await getClubState();
+                if (state && state.shift_open) {
                     shiftBadge.textContent = 'Club Open';
                     shiftBadge.className = 'shift-badge shift-open';
                     shiftTimeLabel.textContent = 'Shift Status: Online';
-                    shiftStartText.textContent = `Opened at: ${new Date(activeShift.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}`;
+                    shiftStartText.textContent = `Opened at: ${new Date(state.shift_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}`;
                     shiftActionBtn.textContent = '🔴 Close Snooker & Get PDF Sales Report';
                     shiftActionBtn.className = 'btn-shift-action btn-close-club';
                 } else {
@@ -1034,25 +1037,22 @@
             }
 
             shiftActionBtn.addEventListener('click', async () => {
-                const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
+                const state = await getClubState();
 
-                if (!activeShift || !activeShift.isOpen) {
-                    const newShift = {
-                        isOpen: true,
-                        startTime: Date.now()
-                    };
-                    localStorage.setItem('cuedesk_active_shift', JSON.stringify(newShift));
-                    updateShiftUI();
+                if (!state || !state.shift_open) {
+                    const startTime = Date.now();
+                    await updateClubState({ shift_open: true, shift_start_time: startTime });
+                    await updateShiftUI();
                     alert('Snooker Club is now OPEN! Fresh shift sales tracking started.');
                 } else {
-                    const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                    const activeSessions = state.active_sessions || {};
                     if (Object.keys(activeSessions).length > 0) {
                         alert('Warning: Some tables are currently active playing! Please end all active games before closing the shift.');
                         return;
                     }
 
                     if (confirm('Are you sure you want to CLOSE the Snooker Club and generate the shift PDF sales report?')) {
-                        await closeShiftAndGeneratePDF(activeShift.startTime);
+                        await closeShiftAndGeneratePDF(state.shift_start_time);
                     }
                 }
             });
@@ -1061,11 +1061,8 @@
                 const endTime = Date.now();
                 const clubName = localStorage.getItem('cuedesk_club_name') || 'CUEDESK SNOOKER CLUB';
                 
-                const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
-                const shiftSessions = localHistory.filter(s => {
-                    const sessionTime = s.timestamp ? new Date(s.timestamp).getTime() : Date.now();
-                    return sessionTime >= startTime;
-                });
+                const { data: sessionHistory } = await supabase.from('game_sessions').select('*').gte('created_at', new Date(startTime).toISOString());
+                const shiftSessions = sessionHistory || [];
 
                 let shiftTotal = 0;
                 const pdfBody = document.getElementById('pdf-table-body');
@@ -1075,14 +1072,14 @@
                     pdfBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 10px;">No games played in this shift.</td></tr>`;
                 } else {
                     shiftSessions.forEach(s => {
-                        shiftTotal += parseFloat(s.bill);
+                        shiftTotal += parseFloat(s.total_bill);
                         pdfBody.innerHTML += `
                             <tr>
-                                <td style="border: 1px solid #ccc; padding: 6px; text-align: center;">Table ${s.tableId}</td>
-                                <td style="border: 1px solid #ccc; padding: 6px;">${s.gameType}</td>
-                                <td style="border: 1px solid #ccc; padding: 6px;">${s.format}</td>
-                                <td style="border: 1px solid #ccc; padding: 6px;">${s.duration}</td>
-                                <td style="border: 1px solid #ccc; padding: 6px; font-weight: bold;">Rs. ${s.bill}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px; text-align: center;">Table ${s.table_id}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">${s.game_type}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">${s.game_format}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">${s.duration_minutes} mins</td>
+                                <td style="border: 1px solid #ccc; padding: 6px; font-weight: bold;">Rs. ${s.total_bill}</td>
                             </tr>
                         `;
                     });
@@ -1102,8 +1099,8 @@
                 });
                 localStorage.setItem('cuedesk_saved_reports', JSON.stringify(savedReports));
 
-                localStorage.removeItem('cuedesk_active_shift');
-                updateShiftUI();
+                await updateClubState({ shift_open: false, shift_start_time: null });
+                await updateShiftUI();
 
                 const printDiv = document.getElementById('printable-sales-report');
                 printDiv.style.display = 'block';
@@ -1133,12 +1130,13 @@
                 });
             }
 
-            function getTotalTables() {
-                return parseInt(localStorage.getItem('cuedesk_total_tables') || '5');
+            async function getTotalTables() {
+                const state = await getClubState();
+                return state ? state.total_tables : 5;
             }
 
-            function setTotalTables(count) {
-                localStorage.setItem('cuedesk_total_tables', count.toString());
+            async function setTotalTables(count) {
+                await updateClubState({ total_tables: count });
             }
 
             async function fetchSupabaseClubProfile() {
@@ -1166,12 +1164,13 @@
                 return { ...defaultRates, ...saved };
             }
 
-            function renderTablesUI() {
-                const total = getTotalTables();
+            async function renderTablesUI() {
+                const total = await getTotalTables();
                 tablesContainer.innerHTML = '';
                 indicatorsContainer.innerHTML = '';
 
-                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                const state = await getClubState();
+                const activeSessions = state ? (state.active_sessions || {}) : {};
 
                 for (let i = 1; i <= total; i++) {
                     const indDiv = document.createElement('div');
@@ -1246,38 +1245,40 @@
                 initPersistentSessions();
             }
 
-            document.getElementById('btn-add-table').addEventListener('click', () => {
-                let current = getTotalTables();
+            document.getElementById('btn-add-table').addEventListener('click', async () => {
+                let current = await getTotalTables();
                 if (current >= 20) {
                     alert('Maximum 20 tables allowed!');
                     return;
                 }
-                setTotalTables(current + 1);
-                renderTablesUI();
+                await setTotalTables(current + 1);
+                await renderTablesUI();
             });
 
-            document.getElementById('btn-remove-table').addEventListener('click', () => {
-                let current = getTotalTables();
+            document.getElementById('btn-remove-table').addEventListener('click', async () => {
+                let current = await getTotalTables();
                 if (current <= 1) {
                     alert('Minimum 1 table is required!');
                     return;
                 }
 
-                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                const state = await getClubState();
+                const activeSessions = state ? (state.active_sessions || {}) : {};
                 if (activeSessions[current]) {
                     alert(`Cannot remove Table ${current} while a game is currently playing on it! Please end the game first.`);
                     return;
                 }
 
                 if (confirm(`Are you sure you want to remove Table ${current}?`)) {
-                    setTotalTables(current - 1);
-                    renderTablesUI();
+                    await setTotalTables(current - 1);
+                    await renderTablesUI();
                 }
             });
 
-            function updateOverviewCounts() {
-                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
-                const totalTables = getTotalTables();
+            async function updateOverviewCounts() {
+                const state = await getClubState();
+                const activeSessions = state ? (state.active_sessions || {}) : {};
+                const totalTables = await getTotalTables();
                 
                 let playingCount = 0;
                 for (let i = 1; i <= totalTables; i++) {
@@ -1301,9 +1302,10 @@
                 }
             }
 
-            function initPersistentSessions() {
-                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
-                const totalTables = getTotalTables();
+            async function initPersistentSessions() {
+                const state = await getClubState();
+                const activeSessions = state ? (state.active_sessions || {}) : {};
+                const totalTables = await getTotalTables();
 
                 for (let tableId = 1; tableId <= totalTables; tableId++) {
                     const session = activeSessions[tableId];
@@ -1311,7 +1313,7 @@
                         startTimerUI(tableId, session.startTime);
                     }
                 }
-                updateOverviewCounts();
+                await updateOverviewCounts();
             }
 
             function startTimerUI(tableId, startTime) {
@@ -1328,10 +1330,11 @@
                 }, 1000);
             }
 
-            function openManageModal(tableId) {
+            async function openManageModal(tableId) {
                 activeTableInput.value = tableId;
                 modalTableTitle.textContent = `Manage Table ${tableId}`;
-                const activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                const state = await getClubState();
+                const activeSessions = state ? (state.active_sessions || {}) : {};
                 
                 if (activeSessions[tableId]) {
                     modalActionBtn.textContent = 'End Game & Process Payment';
@@ -1389,7 +1392,9 @@
                 const gameType = gameTypeSelect.value;
                 const format = formatSelect.value;
                 const rates = getRates();
-                let activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
+                
+                const state = await getClubState();
+                let activeSessions = state ? (state.active_sessions || {}) : {};
 
                 if (activeSessions[tableId]) {
                     clearInterval(timerIntervals[tableId]);
@@ -1424,12 +1429,10 @@
                         total_bill: parseFloat(bill)
                     };
 
-                    // Also save game session as an other sale record if online/cash payment includes receipt or if it needs to reflect in sales
                     try {
                         const { error } = await supabase.from('game_sessions').insert([sessionPayload]);
                         if (error) throw error;
 
-                        // If online payment with slip, save in canteen_sales with slip image so it syncs across devices
                         if (slipBase64) {
                             await supabase.from('canteen_sales').insert([{
                                 user_id: currentUser.id,
@@ -1446,29 +1449,28 @@
                     }
 
                     delete activeSessions[tableId];
-                    localStorage.setItem('bt_active_sessions', JSON.stringify(activeSessions));
+                    await updateClubState({ active_sessions: activeSessions });
 
                 } else {
-                    const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
-                    if (!activeShift || !activeShift.isOpen) {
+                    if (!state || !state.shift_open) {
                         alert('Please click "Open Snooker Club" at the top before starting games!');
                         return;
                     }
 
                     const startTime = Date.now();
                     activeSessions[tableId] = { startTime, gameType, format };
-                    localStorage.setItem('bt_active_sessions', JSON.stringify(activeSessions));
+                    await updateClubState({ active_sessions: activeSessions });
                     
                     startTimerUI(tableId, startTime);
                 }
 
-                updateOverviewCounts();
-                renderTablesUI();
+                await updateOverviewCounts();
+                await renderTablesUI();
                 closeManageModal();
             });
 
-            updateShiftUI();
-            renderTablesUI();
+            await updateShiftUI();
+            await renderTablesUI();
         });
     </script>
 </body>
