@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Session History & Sales - CUEDESK</title>
+    <title>Session History & Sales - CUEDESK by Rehan</title>
 
     <script type="importmap">
       {
@@ -69,7 +69,7 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            min-width: 650px;
+            min-width: 750px;
         }
         .history-table th, .history-table td {
             padding: 0.85rem 1rem;
@@ -97,20 +97,28 @@
             color: #00b4d8;
             border: 1px solid rgba(0, 180, 216, 0.4);
         }
+        .pay-credit {
+            background: rgba(231, 111, 81, 0.2);
+            color: #e76f51;
+            border: 1px solid rgba(231, 111, 81, 0.4);
+        }
         .pay-inventory {
             background: rgba(212, 175, 55, 0.2);
             color: var(--gold-primary);
             border: 1px solid rgba(212, 175, 55, 0.4);
         }
-        .view-slip-btn {
+        .action-btn-custom {
             background: var(--gold-primary);
             color: #000;
             border: none;
             padding: 0.35rem 0.75rem;
             font-weight: bold;
+            font-size: 0.8rem;
             border-radius: 4px;
             cursor: pointer;
+            transition: opacity 0.2s;
         }
+        .action-btn-custom:hover { opacity: 0.85; }
 
         .slip-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -128,6 +136,19 @@
             max-width: 100%; max-height: 70vh; border-radius: 8px; margin-top: 1rem;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
+
+        /* Printable Single Thermal Receipt Bill for History Download */
+        #printable-history-bill {
+            display: none;
+        }
+        @media print {
+            body * { visibility: hidden !important; }
+            #printable-history-bill, #printable-history-bill * { visibility: visible !important; }
+            #printable-history-bill {
+                position: absolute; left: 0; top: 0; width: 100%; display: block !important;
+                background: #fff !important; color: #000 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -135,7 +156,7 @@
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <h1 class="brand-title">CUEDESK</h1>
-                <p class="brand-subtitle">Snooker Management</p>
+                <p class="brand-subtitle">Snooker Management by Rehan</p>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-item"><span>🎱</span> Tables & Games</a>
@@ -161,7 +182,7 @@
                 <div class="history-card">
                     <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                         <div class="current-date-badge" id="today-display-badge">📅 Loading Date...</div>
-                        <span style="color: var(--text-muted); font-size: 0.85rem;">Cloud Sync & Real-time Records</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">CUEDESK by Rehan — Real-time Cloud Sync</span>
                     </div>
 
                     <div class="history-header">
@@ -180,18 +201,19 @@
                         <table class="history-table">
                             <thead>
                                 <tr>
-                                    <th>Source / Table #</th>
-                                    <th>Description / Game Type</th>
-                                    <th>Format</th>
-                                    <th>Duration / Qty</th>
-                                    <th>Bill / Amount</th>
+                                    <th>Table / Source</th>
+                                    <th>Player Name</th>
+                                    <th>Game Type</th>
+                                    <th>Format / Multiplier</th>
+                                    <th>Duration</th>
+                                    <th>Total Bill</th>
                                     <th>Payment Mode</th>
-                                    <th>Slip Receipt</th>
+                                    <th>Receipt / Action</th>
                                     <th>Time Ended</th>
                                 </tr>
                             </thead>
                             <tbody id="history-rows">
-                                <tr><td colspan="8" style="text-align:center; color: var(--text-muted);">Loading records from cloud...</td></tr>
+                                <tr><td colspan="9" style="text-align:center; color: var(--text-muted);">Loading records from cloud...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -204,8 +226,21 @@
     <div id="slip-modal" class="slip-modal-overlay">
         <div class="slip-modal-card">
             <button id="close-slip-modal" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
-            <h3 style="color: var(--gold-primary); margin: 0;">Transaction Receipt Slip</h3>
+            <h3 style="color: var(--gold-primary); margin: 0;">Online Payment Receipt</h3>
             <img id="slip-modal-image" class="slip-modal-img" src="" alt="Payment Receipt">
+        </div>
+    </div>
+
+    <!-- Hidden Printable Receipt for History Download -->
+    <div id="printable-history-bill">
+        <div style="width: 280px; margin: 0 auto; text-align: center; padding: 15px; font-family: monospace; color: #000; background: #fff;">
+            <h2 id="print-history-club" style="margin: 0 0 5px 0; font-size: 18px;">CUEDESK SNOOKER CLUB</h2>
+            <p style="margin: 0; font-size: 12px;">Session History Bill</p>
+            <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+            <div id="print-history-body" style="text-align: left; font-size: 13px; line-height: 1.5;"></div>
+            <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+            <p style="font-size: 12px; margin: 5px 0; font-weight: bold;">Thank you! Visit Again</p>
+            <p style="font-size: 10px; margin: 0; color: #444;">CUEDESK by Rehan</p>
         </div>
     </div>
 
@@ -265,21 +300,26 @@
 
         async function fetchAllHistory() {
             try {
-                // 1. Fetch Table Game Sessions
-                const { data: sessions } = await supabase
+                // 1. Fetch Table Game Sessions from Supabase
+                const { data: sessions, error } = await supabase
                     .from('game_sessions')
                     .select('*')
-                    .eq('user_id', currentUser.id);
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
 
                 // 2. Fetch Canteen / Inventory Sales
                 const { data: sales } = await supabase
                     .from('canteen_sales')
                     .select('*')
-                    .eq('user_id', currentUser.id);
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
 
                 let formattedSessions = (sessions || []).map(s => ({
                     type: 'game',
                     table_id: `Table ${s.table_id}`,
+                    player_name: s.player_name || 'Walk-in Player',
                     description: s.game_type,
                     format: s.game_format,
                     duration: `${s.duration_minutes} mins`,
@@ -291,9 +331,10 @@
 
                 let formattedSales = (sales || []).map(sal => ({
                     type: 'inventory',
-                    table_id: '📦 POS / Counter',
+                    table_id: '📦 POS Counter',
+                    player_name: 'Store Sale',
                     description: sal.title,
-                    format: 'Retail',
+                    format: 'Retail Stock',
                     duration: '1 Unit',
                     amount: parseFloat(sal.amount || 0),
                     payment_mode: 'INVENTORY',
@@ -301,14 +342,13 @@
                     created_at: sal.created_at
                 }));
 
-                // Combine both and sort by newest first
                 combinedRecords = [...formattedSessions, ...formattedSales].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
                 const activePickerDate = document.getElementById('history-date-picker').value;
                 filterAndRenderHistory(activePickerDate);
             } catch (err) {
                 console.error('Error fetching history:', err.message);
-                document.getElementById('history-rows').innerHTML = `<tr><td colspan="8" style="text-align:center; color: #e76f51;">Error loading records from cloud.</td></tr>`;
+                document.getElementById('history-rows').innerHTML = `<tr><td colspan="9" style="text-align:center; color: #e76f51;">Error loading records from cloud.</td></tr>`;
             }
         }
 
@@ -329,7 +369,7 @@
             }
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding: 2rem;">No records found for ${selectedDate || 'selected view'}.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: var(--text-muted); padding: 2rem;">No records found for ${selectedDate || 'selected view'}.</td></tr>`;
                 totalElem.textContent = `Revenue: Rs. 0`;
                 return;
             }
@@ -342,20 +382,30 @@
 
                 let payMode = '<span class="payment-pill pay-cash">💵 CASH</span>';
                 if (record.payment_mode === 'ONLINE') payMode = '<span class="payment-pill pay-online">💳 ONLINE</span>';
-                if (record.payment_mode === 'INVENTORY') payMode = '<span class="payment-pill pay-inventory">📦 STORE SALE</span>';
+                if (record.payment_mode === 'CREDIT') payMode = '<span class="payment-pill pay-credit">🤝 CREDIT</span>';
+                if (record.payment_mode === 'INVENTORY') payMode = '<span class="payment-pill pay-inventory">📦 STORE</span>';
 
-                const slipAction = record.slip_image ? `<button class="view-slip-btn" onclick="openSlipViewer('${index}')">📷 View Slip</button>` : 'N/A';
+                let actionHtml = '';
+                if (record.type === 'game') {
+                    actionHtml = `<button class="action-btn-custom" onclick="downloadHistoryBill(${index})">🖨️ Download Bill</button>`;
+                } else if (record.slip_image) {
+                    actionHtml = `<button class="action-btn-custom" onclick="openSlipViewer(${index})">📷 View Slip</button>`;
+                } else {
+                    actionHtml = 'N/A';
+                }
+
                 const timeEnded = record.created_at ? new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--';
 
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${record.table_id}</strong></td>
+                        <td><strong style="color:var(--gold-primary);">${record.player_name}</strong></td>
                         <td>${record.description}</td>
                         <td>${record.format}</td>
                         <td>${record.duration}</td>
                         <td style="color: var(--gold-primary); font-weight: bold;">Rs. ${record.amount}</td>
                         <td>${payMode}</td>
-                        <td>${slipAction}</td>
+                        <td>${actionHtml}</td>
                         <td>${timeEnded}</td>
                     </tr>
                 `;
@@ -370,6 +420,27 @@
                 document.getElementById('slip-modal-image').src = record.slip_image;
                 document.getElementById('slip-modal').classList.add('active');
             }
+        };
+
+        window.downloadHistoryBill = function(index) {
+            const r = combinedRecords[index];
+            if (!r) return;
+            const clubName = document.getElementById('display-club-name').textContent || 'CUEDESK SNOOKER CLUB';
+
+            document.getElementById('print-history-club').textContent = clubName.toUpperCase();
+            document.getElementById('print-history-body').innerHTML = `
+                <b>Date/Time:</b> ${new Date(r.created_at).toLocaleString()}<br>
+                <b>Table:</b> ${r.table_id}<br>
+                <b>Player Name:</b> ${r.player_name}<br>
+                <b>Game Type:</b> ${r.description}<br>
+                <b>Format:</b> ${r.format}<br>
+                <b>Duration:</b> ${r.duration}<br>
+                <b>Payment Mode:</b> ${r.payment_mode}<br>
+                ----------------------------------<br>
+                <b style="font-size:15px;">TOTAL BILL: Rs. ${r.amount}</b>
+            `;
+
+            window.print();
         };
     </script>
 </body>
