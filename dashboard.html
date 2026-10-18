@@ -716,10 +716,10 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <thead>
                 <tr style="background: #f0f0f0;">
-                    <th style="border: 1px solid #ccc; padding: 8px;">Table</th>
-                    <th style="border: 1px solid #ccc; padding: 8px;">Game</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Source / Table</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Game / Item</th>
                     <th style="border: 1px solid #ccc; padding: 8px;">Format</th>
-                    <th style="border: 1px solid #ccc; padding: 8px;">Duration</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Duration / Qty</th>
                     <th style="border: 1px solid #ccc; padding: 8px;">Bill</th>
                 </tr>
             </thead>
@@ -856,12 +856,10 @@
             document.getElementById('open-sale-modal').addEventListener('click', () => saleModal.classList.add('active'));
             document.getElementById('sale-modal-close').addEventListener('click', () => saleModal.classList.remove('active'));
 
-            // Apple Pay Style Success Sound (Web Audio API Chime)
             function playAppleSuccessSound() {
                 try {
                     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     
-                    // First chime note (E6)
                     const osc1 = audioCtx.createOscillator();
                     const gain1 = audioCtx.createGain();
                     osc1.type = 'sine';
@@ -875,7 +873,6 @@
                     osc1.start();
                     osc1.stop(audioCtx.currentTime + 0.35);
 
-                    // Second harmonious chime note (A6) slightly delayed
                     setTimeout(() => {
                         const osc2 = audioCtx.createOscillator();
                         const gain2 = audioCtx.createGain();
@@ -895,7 +892,6 @@
                 }
             }
 
-            // Apple Purchase Counting Animation Trigger
             function playApplePurchaseAnimation(finalAmount, onComplete) {
                 const overlay = document.getElementById('apple-success-overlay');
                 const amountElem = document.getElementById('apple-animated-amount');
@@ -906,7 +902,7 @@
                 let currentVal = 0;
                 let steps = 30;
                 let increment = Math.max(1, Math.floor(finalAmount / steps));
-                let duration = 700; // ms
+                let duration = 700;
                 let stepTime = duration / steps;
 
                 let counter = setInterval(() => {
@@ -1184,16 +1180,22 @@
                 const endTime = Date.now();
                 const clubName = localStorage.getItem('cuedesk_club_name') || 'CUEDESK SNOOKER CLUB';
                 
+                // Fetch Table Sessions for this shift
                 const { data: sessionHistory } = await supabase.from('game_sessions').select('*').eq('user_id', currentUser.id).gte('created_at', new Date(startTime).toISOString());
                 const shiftSessions = sessionHistory || [];
+
+                // Fetch Inventory / Canteen Sales for this shift
+                const { data: salesHistory } = await supabase.from('canteen_sales').select('*').eq('user_id', currentUser.id).gte('created_at', new Date(startTime).toISOString());
+                const shiftSales = salesHistory || [];
 
                 let shiftTotal = 0;
                 const pdfBody = document.getElementById('pdf-table-body');
                 pdfBody.innerHTML = '';
 
-                if (shiftSessions.length === 0) {
-                    pdfBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 10px;">No games played in this shift.</td></tr>`;
+                if (shiftSessions.length === 0 && shiftSales.length === 0) {
+                    pdfBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 10px;">No games or sales recorded in this shift.</td></tr>`;
                 } else {
+                    // Add Table Sessions to PDF
                     shiftSessions.forEach(s => {
                         shiftTotal += parseFloat(s.total_bill);
                         pdfBody.innerHTML += `
@@ -1203,6 +1205,20 @@
                                 <td style="border: 1px solid #ccc; padding: 6px;">${s.game_format}</td>
                                 <td style="border: 1px solid #ccc; padding: 6px;">${s.duration_minutes} mins</td>
                                 <td style="border: 1px solid #ccc; padding: 6px; font-weight: bold;">Rs. ${s.total_bill}</td>
+                            </tr>
+                        `;
+                    });
+
+                    // Add Inventory/Canteen Sales to PDF
+                    shiftSales.forEach(sal => {
+                        shiftTotal += parseFloat(sal.amount);
+                        pdfBody.innerHTML += `
+                            <tr>
+                                <td style="border: 1px solid #ccc; padding: 6px; text-align: center;">POS Counter</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">${sal.title}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">Retail Stock</td>
+                                <td style="border: 1px solid #ccc; padding: 6px;">1 Unit</td>
+                                <td style="border: 1px solid #ccc; padding: 6px; font-weight: bold;">Rs. ${sal.amount}</td>
                             </tr>
                         `;
                     });
@@ -1218,7 +1234,7 @@
                     startTime: new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     endTime: new Date(endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     revenue: shiftTotal,
-                    totalGames: shiftSessions.length
+                    totalGames: shiftSessions.length + shiftSales.length
                 });
                 localStorage.setItem('cuedesk_saved_reports', JSON.stringify(savedReports));
 
@@ -1246,7 +1262,7 @@
                         <div class="report-item">
                             <div style="font-weight: bold; color: var(--gold-primary);">📅 ${rep.date} Shift</div>
                             <div style="font-size: 0.8rem; color: var(--text-muted); margin: 0.2rem 0;">Time: ${rep.startTime} - ${rep.endTime}</div>
-                            <div style="font-size: 0.85rem;">Games Played: <strong>${rep.totalGames}</strong></div>
+                            <div style="font-size: 0.85rem;">Total Transactions: <strong>${rep.totalGames}</strong></div>
                             <div style="font-size: 0.9rem; font-weight: bold; color: var(--badge-available); margin-top: 0.3rem;">Revenue: Rs. ${rep.revenue}</div>
                         </div>
                     `;
@@ -1554,7 +1570,6 @@
 
                     closeManageModal();
 
-                    // Trigger Apple style success sound and counting animation
                     playApplePurchaseAnimation(bill, async () => {
                         try {
                             const { error } = await supabase.from('game_sessions').insert([sessionPayload]);
