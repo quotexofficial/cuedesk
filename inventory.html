@@ -27,6 +27,90 @@
             gap: 1rem;
             margin-bottom: 1.25rem;
         }
+        /* Big POS Sell Buttons Grid */
+        .pos-sell-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+        .pos-item-card {
+            background: linear-gradient(145deg, #16161c, #0e0e12);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .pos-item-card:hover {
+            border-color: var(--gold-primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
+        }
+        .big-sell-btn {
+            background: linear-gradient(135deg, var(--gold-primary), #a3821a);
+            color: #000;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-weight: 800;
+            font-size: 1rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: transform 0.1s ease, filter 0.2s ease;
+            box-shadow: 0 4px 12px rgba(212,175,55,0.4);
+        }
+        .big-sell-btn:active {
+            transform: scale(0.96);
+        }
+        .big-sell-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Apple Style Success Animation Overlay */
+        #apple-success-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(8, 8, 10, 0.92);
+            backdrop-filter: blur(16px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #apple-success-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .apple-success-box {
+            text-align: center;
+            animation: applePopup 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            background: linear-gradient(145deg, #16161c, #0e0e12);
+            border: 1px solid var(--gold-primary);
+            padding: 3rem 4rem;
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.3);
+        }
+        @keyframes applePopup {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .apple-check-icon {
+            width: 70px; height: 70px; background: linear-gradient(135deg, var(--gold-primary), #a3821a);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem auto; font-size: 2rem; color: #000; box-shadow: 0 0 25px rgba(212,175,55,0.6);
+        }
+        .apple-animated-amount {
+            font-size: 3rem; font-weight: 900; color: #fff; font-family: monospace; margin: 0.5rem 0;
+            text-shadow: 0 0 20px rgba(212,175,55,0.4);
+        }
     </style>
 </head>
 <body>
@@ -46,13 +130,23 @@
 
         <div class="main-content">
             <header class="top-header">
-                <h2 class="header-title" style="font-size: 1.2rem;">Inventory & Stock Management</h2>
+                <h2 class="header-title" style="font-size: 1.2rem;">Inventory & POS Sales</h2>
                 <div class="owner-profile">
                     <span class="profile-name" id="display-club-name" style="color: var(--gold-primary); font-weight: bold;">Loading...</span>
                 </div>
             </header>
 
             <main>
+                <!-- Quick POS Sell Grid Section -->
+                <div class="inventory-card">
+                    <h3 style="color: var(--gold-primary); margin-top: 0;">⚡ Quick POS Sell Items</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Click 'Sell' on any item to instantly process quantities, deduct stock, and trigger animations.</p>
+                    <div id="pos-sell-container" class="pos-sell-grid">
+                        <p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">Loading inventory items...</p>
+                    </div>
+                </div>
+
+                <!-- Add New Stock Item Form -->
                 <div class="inventory-card">
                     <h3 style="color: var(--gold-primary); margin-top: 0;">Add New Stock Item</h3>
                     <form id="inventory-form">
@@ -74,6 +168,7 @@
                     </form>
                 </div>
 
+                <!-- Stock & Sales Overview Table -->
                 <div class="inventory-card">
                     <h3 style="color: var(--gold-primary); margin-top: 0;">Stock & Sales Overview</h3>
                     <div style="overflow-x: auto;">
@@ -94,6 +189,16 @@
                     </div>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <!-- Apple Success Sound & Animation Overlay -->
+    <div id="apple-success-overlay">
+        <div class="apple-success-box">
+            <div class="apple-check-icon">✓</div>
+            <h3 style="color: var(--gold-primary); margin: 0 0 0.5rem 0; font-size: 1.4rem;">Item Sold Successfully</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;" id="apple-sold-subtitle">Inventory Sale Recorded</p>
+            <div class="apple-animated-amount" id="apple-animated-amount">Rs. 0</div>
         </div>
     </div>
 
@@ -136,19 +241,93 @@
             });
         });
 
+        // Apple Pay Style Success Sound (Web Audio API Chime)
+        function playAppleSuccessSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(1318.51, audioCtx.currentTime); // E6
+                gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
+                
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                
+                osc1.start();
+                osc1.stop(audioCtx.currentTime + 0.35);
+
+                setTimeout(() => {
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(1760.00, audioCtx.currentTime); // A6
+                    gain2.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.45);
+                    
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    
+                    osc2.start();
+                    osc2.stop(audioCtx.currentTime + 0.45);
+                }, 120);
+            } catch (e) {
+                console.log('Audio Context info:', e);
+            }
+        }
+
+        // Apple Purchase Counting Animation Trigger
+        function playApplePurchaseAnimation(finalAmount, subtitleText, onComplete) {
+            const overlay = document.getElementById('apple-success-overlay');
+            const amountElem = document.getElementById('apple-animated-amount');
+            const subtitleElem = document.getElementById('apple-sold-subtitle');
+            
+            subtitleElem.textContent = subtitleText;
+            playAppleSuccessSound();
+            overlay.classList.add('active');
+
+            let currentVal = 0;
+            let steps = 30;
+            let increment = Math.max(1, Math.floor(finalAmount / steps));
+            let duration = 700;
+            let stepTime = duration / steps;
+
+            let counter = setInterval(() => {
+                currentVal += increment;
+                if (currentVal >= finalAmount) {
+                    currentVal = finalAmount;
+                    clearInterval(counter);
+                }
+                amountElem.textContent = 'Rs. ' + currentVal.toLocaleString('en-PK');
+            }, stepTime);
+
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                if (typeof onComplete === 'function') onComplete();
+            }, 1400);
+        }
+
         async function loadInventory() {
             try {
                 const { data, error } = await supabase.from('club_inventory').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
                 if (error) throw error;
 
                 const tbody = document.getElementById('inventory-table-body');
+                const posGrid = document.getElementById('pos-sell-container');
+
                 if (!data || data.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No inventory items added yet.</td></tr>`;
+                    posGrid.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No items available for POS sale.</p>`;
                     return;
                 }
 
                 tbody.innerHTML = '';
+                posGrid.innerHTML = '';
+
                 data.forEach(item => {
+                    // Populate Table Row Overview
                     tbody.innerHTML += `
                         <tr style="border-bottom: 1px solid var(--border-color);">
                             <td style="padding: 10px; font-weight: bold;">${item.item_name}</td>
@@ -156,10 +335,22 @@
                             <td style="padding: 10px;">Rs. ${item.price_per_piece}</td>
                             <td style="padding: 10px; color: var(--gold-primary);">${item.sold_count} sold</td>
                             <td style="padding: 10px;">
-                                <button class="table-control-btn btn-add-table" onclick="sellItem('${item.id}', ${item.stock}, ${item.price_per_piece}, '${item.item_name}')">Sell 1</button>
+                                <button class="table-control-btn btn-add-table" onclick="promptSell('${item.id}', ${item.stock}, ${item.price_per_piece}, '${item.item_name}', ${item.sold_count})">Sell</button>
                                 <button class="table-control-btn btn-remove-table" onclick="deleteItem('${item.id}')">Delete</button>
                             </td>
                         </tr>
+                    `;
+
+                    // Populate Big POS Sell Cards Grid
+                    posGrid.innerHTML += `
+                        <div class="pos-item-card">
+                            <div>
+                                <h4 style="color: #fff; margin: 0 0 0.4rem 0; font-size: 1.1rem;">${item.item_name}</h4>
+                                <div style="color: var(--gold-primary); font-weight: bold; font-size: 1rem;">Rs. ${item.price_per_piece} / pc</div>
+                                <div style="color: ${item.stock > 0 ? '#2a9d8f' : '#e63946'}; font-size: 0.85rem; margin-top: 0.3rem;">Stock: ${item.stock} available</div>
+                            </div>
+                            <button class="big-sell-btn" onclick="promptSell('${item.id}', ${item.stock}, ${item.price_per_piece}, '${item.item_name}', ${item.sold_count})">🛒 Sell Item</button>
+                        </div>
                     `;
                 });
             } catch (err) {
@@ -167,28 +358,50 @@
             }
         }
 
-        window.sellItem = async function(id, currentStock, price, name) {
+        window.promptSell = async function(id, currentStock, price, name, currentSoldCount) {
             if (currentStock <= 0) {
-                alert('Stock is empty!');
+                alert(`Sorry, ${name} stock is empty!`);
                 return;
             }
 
-            const newStock = currentStock - 1;
-            try {
-                // Update stock and sold count in inventory table
-                await supabase.from('club_inventory').update({ stock: newStock, sold_count: supabase.sql`sold_count + 1` }).eq('id', id);
-                // Also log it as a canteen sale so it adds to revenue and session reports!
-                await supabase.from('canteen_sales').insert([{
-                    user_id: currentUser.id,
-                    title: `Inventory Sale: ${name}`,
-                    amount: price
-                }]);
+            const qtyInput = prompt(`Sell Item: ${name}\nAvailable Stock: ${currentStock}\nPrice per piece: Rs. ${price}\n\nEnter quantity to sell:`, "1");
+            if (qtyInput === null) return;
 
-                await loadInventory();
-                alert(`Sold 1 ${name} for Rs. ${price}! Added to sales.`);
-            } catch (err) {
-                alert('Error processing sale: ' + err.message);
+            const qty = parseInt(qtyInput);
+            if (!Number.isFinite(qty) || qty <= 0) {
+                alert('Please enter a valid positive quantity.');
+                return;
             }
+
+            if (qty > currentStock) {
+                alert(`Cannot sell ${qty} pieces. Only ${currentStock} available in stock!`);
+                return;
+            }
+
+            const totalAmount = qty * price;
+            const newStock = currentStock - qty;
+            const newSoldCount = currentSoldCount + qty;
+
+            playApplePurchaseAnimation(totalAmount, `Sold ${qty}x ${name}`, async () => {
+                try {
+                    // Update stock and sold count in inventory table
+                    await supabase.from('club_inventory').update({ 
+                        stock: newStock, 
+                        sold_count: newSoldCount 
+                    }).eq('id', id);
+
+                    // Log it as a canteen/inventory sale so it adds to revenue and session reports!
+                    await supabase.from('canteen_sales').insert([{
+                        user_id: currentUser.id,
+                        title: `Inventory Sale: ${qty}x ${name}`,
+                        amount: totalAmount
+                    }]);
+
+                    await loadInventory();
+                } catch (err) {
+                    alert('Error processing sale: ' + err.message);
+                }
+            });
         };
 
         window.deleteItem = async function(id) {
@@ -196,7 +409,7 @@
             try {
                 await supabase.from('club_inventory').delete().eq('id', id);
                 await loadInventory();
-            } catch (err) {
+            }ϲatch (err) {
                 alert('Error deleting item: ' + err.message);
             }
         };
