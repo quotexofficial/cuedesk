@@ -582,7 +582,7 @@
                         <p class="finance-subtitle">Manage expenses, customer credits and additional sales in one place.</p>
                     </div>
                     <div style="display:flex;align-items:center;gap:.5rem;color:#39d9a8;font-size:.78rem;font-weight:700;border:1px solid rgba(57,217,168,.22);background:rgba(57,217,168,.06);padding:.55rem .75rem;border-radius:999px;white-space:nowrap;">
-                        <span style="width:7px;height:7px;background:#39d9a8;border-radius:50%;box-shadow:0 0 10px #39d9a8;"></span> LIVE RECORDS
+                        <span style="width:7px;height:7px;background:#39d9a8;border-radius:50%;box-shadow:0 0 10px #39d9a8;"></span> LIVE CLOUD SYNC
                     </div>
                 </div>
                 <div class="management-action-bar">
@@ -749,6 +749,15 @@
         </div>
     </div>
 
+    <!-- Slip Preview Modal -->
+    <div id="slip-modal" class="modal-overlay">
+        <div class="modal-card" style="text-align: center;">
+            <button class="modal-close" id="slip-modal-close">&times;</button>
+            <h3 style="color: var(--gold-primary); margin-top: 0;">Online Payment Receipt</h3>
+            <div id="slip-container" style="margin-top: 1rem; max-height: 400px; overflow: auto;"></div>
+        </div>
+    </div>
+
     <script type="module" src="js/auth.js"></script>
     <script type="module">
         import { supabase } from './js/supabase.js';
@@ -780,12 +789,14 @@
 
             const expenseModal = document.getElementById('expense-modal');
             const creditModal = document.getElementById('credit-modal');
+            const slipModal = document.getElementById('slip-modal');
 
             document.getElementById('open-expense-modal').addEventListener('click', () => expenseModal.classList.add('active'));
             document.getElementById('expense-modal-close').addEventListener('click', () => expenseModal.classList.remove('active'));
 
             document.getElementById('open-credit-modal').addEventListener('click', () => creditModal.classList.add('active'));
             document.getElementById('credit-modal-close').addEventListener('click', () => creditModal.classList.remove('active'));
+            document.getElementById('slip-modal-close').addEventListener('click', () => slipModal.classList.remove('active'));
 
             let currentUser = null;
             try {
@@ -821,9 +832,7 @@
                     const { error } = await supabase.from('club_expenses').insert([{ user_id: currentUser.id, title, amount }]);
                     if (error) throw error;
                 } catch (err) {
-                    const expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
-                    expenses.push({ id: Date.now(), title, amount, time: new Date().toLocaleString() });
-                    localStorage.setItem('cuedesk_expenses', JSON.stringify(expenses));
+                    alert('Error saving expense to cloud: ' + err.message);
                 }
 
                 e.target.reset(); expenseModal.classList.remove('active');
@@ -841,9 +850,7 @@
                     const { error } = await supabase.from('club_credits').insert([{ user_id: currentUser.id, name, amount, original_amount: amount, status: 'pending' }]);
                     if (error) throw error;
                 } catch (err) {
-                    const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
-                    credits.push({ id: Date.now(), name, amount, originalAmount: amount, time: new Date().toLocaleString(), status: 'pending' });
-                    localStorage.setItem('cuedesk_credits', JSON.stringify(credits));
+                    alert('Error saving credit to cloud: ' + err.message);
                 }
 
                 e.target.reset(); creditModal.classList.remove('active');
@@ -861,9 +868,7 @@
                     const { error } = await supabase.from('canteen_sales').insert([{ user_id: currentUser.id, title, amount }]);
                     if (error) throw error;
                 } catch (err) {
-                    const sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
-                    sales.push({ id: Date.now(), title, amount, time: new Date().toLocaleString() });
-                    localStorage.setItem('cuedesk_other_sales', JSON.stringify(sales));
+                    alert('Error saving sale to cloud: ' + err.message);
                 }
 
                 e.target.reset(); saleModal.classList.remove('active');
@@ -876,16 +881,14 @@
             async function renderFinanceLists() {
                 let expenses = [], credits = [], sales = [];
                 try {
-                    const { data: exp } = await supabase.from('club_expenses').select('*');
+                    const { data: exp } = await supabase.from('club_expenses').select('*').order('created_at', { ascending: false });
                     if (exp) expenses = exp;
-                    const { data: cred } = await supabase.from('club_credits').select('*');
+                    const { data: cred } = await supabase.from('club_credits').select('*').order('created_at', { ascending: false });
                     if (cred) credits = cred;
-                    const { data: cants } = await supabase.from('canteen_sales').select('*');
+                    const { data: cants } = await supabase.from('canteen_sales').select('*').order('created_at', { ascending: false });
                     if (cants) sales = cants;
                 } catch (err) {
-                    expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
-                    credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
-                    sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
+                    console.error('Error fetching finance lists from Supabase', err);
                 }
 
                 const expenseBox = document.getElementById('expense-list');
@@ -893,25 +896,40 @@
                 const saleBox = document.getElementById('sale-list');
                 const rowStyle = 'display:flex;gap:.6rem;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.75rem;margin:.5rem 0;background:#121212;border:1px solid var(--border-color);border-radius:8px;';
                 
-                expenseBox.innerHTML = expenses.length ? expenses.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.title)}</b><br><small>${escapeFinance(x.time || x.created_at || '')}</small></span><b>${money(x.amount)}</b><span><button class="table-control-btn btn-remove-table" data-fin-delete="expense" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">No expenses recorded yet.</p>';
+                expenseBox.innerHTML = expenses.length ? expenses.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.title)}</b><br><small>${escapeFinance(x.created_at ? new Date(x.created_at).toLocaleString() : '')}</small></span><b>${money(x.amount)}</b><span><button class="table-control-btn btn-remove-table" data-fin-delete="expense" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">No expenses recorded yet.</p>';
                 
-                creditBox.innerHTML = credits.length ? credits.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.name)}</b><br><small>${escapeFinance(x.time || x.created_at || '')} · ${x.status === 'paid' || Number(x.amount) <= 0 ? 'PAID' : 'PENDING'}</small></span><span>Remaining: <b>${money(x.amount)}</b></span><span>${Number(x.amount)>0 ? `<button class="table-control-btn btn-add-table" data-credit-fulfill="${x.id}">Fulfilled / Payment</button>` : ''} <button class="table-control-btn btn-remove-table" data-fin-delete="credit" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">Abhi koi credit / udhar nahi.</p>';
+                creditBox.innerHTML = credits.length ? credits.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.name)}</b><br><small>${escapeFinance(x.created_at ? new Date(x.created_at).toLocaleString() : '')} · ${x.status === 'paid' || Number(x.amount) <= 0 ? 'PAID' : 'PENDING'}</small></span><span>Remaining: <b>${money(x.amount)}</b></span><span>${Number(x.amount)>0 ? `<button class="table-control-btn btn-add-table" data-credit-fulfill="${x.id}">Fulfilled / Payment</button>` : ''} <button class="table-control-btn btn-remove-table" data-fin-delete="credit" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">Abhi koi credit / udhar nahi.</p>';
                 
-                saleBox.innerHTML = sales.length ? sales.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.title)}</b><br><small>${escapeFinance(x.time || x.created_at || '')}</small></span><b>${money(x.amount)}</b><span><button class="table-control-btn btn-remove-table" data-fin-delete="sale" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">Abhi koi other sale nahi.</p>';
+                saleBox.innerHTML = sales.length ? sales.map(x => {
+                    let slipBtn = x.slip_image ? `<button class="table-control-btn btn-add-table" data-view-slip="${x.id}">View Slip</button>` : '';
+                    return `<div style="${rowStyle}"><span><b>${escapeFinance(x.title)}</b><br><small>${escapeFinance(x.created_at ? new Date(x.created_at).toLocaleString() : '')}</small></span><b>${money(x.amount)}</b><span>${slipBtn} <button class="table-control-btn btn-remove-table" data-fin-delete="sale" data-id="${x.id}">Delete</button></span></div>`;
+                }).join('') : '<p style="color:var(--text-muted)">Abhi koi other sale nahi.</p>';
             }
 
             function escapeFinance(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
             document.getElementById('finance-manager').addEventListener('click', async (e) => {
+                const slipId = e.target.getAttribute('data-view-slip');
+                if (slipId) {
+                    try {
+                        const { data } = await supabase.from('canteen_sales').select('slip_image, title').eq('id', slipId).single();
+                        if (data && data.slip_image) {
+                            document.getElementById('slip-container').innerHTML = `<img src="${data.slip_image}" alt="Receipt Slip" style="max-width:100%; border-radius:8px; border:1px solid var(--border-color);">`;
+                            slipModal.classList.add('active');
+                        }
+                    } catch(err) {
+                        alert('Could not load slip image.');
+                    }
+                    return;
+                }
+
                 const fulfillId = e.target.getAttribute('data-credit-fulfill');
                 if (fulfillId) {
                     let credits = [];
                     try {
                         const { data } = await supabase.from('club_credits').select('*');
                         if (data) credits = data;
-                    } catch(err) {
-                        credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
-                    }
+                    } catch(err) {}
 
                     const credit = credits.find(x => String(x.id) === fulfillId);
                     if (!credit || Number(credit.amount) <= 0) return;
@@ -927,12 +945,7 @@
                         await supabase.from('club_credits').update({ amount: newAmount, status: newStatus }).eq('id', fulfillId);
                         await supabase.from('canteen_sales').insert([{ user_id: currentUser.id, title: `Credit payment received — ${credit.name}`, amount: paid }]);
                     } catch(err) {
-                        credit.amount = newAmount;
-                        credit.status = newStatus;
-                        localStorage.setItem('cuedesk_credits', JSON.stringify(credits));
-                        const sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
-                        sales.push({ id: Date.now(), title: `Credit payment received — ${credit.name}`, amount: paid, time: new Date().toLocaleString() });
-                        localStorage.setItem('cuedesk_other_sales', JSON.stringify(sales));
+                        alert('Error updating payment: ' + err.message);
                     }
 
                     alert(newAmount === 0 ? 'Fully paid! Received amount sales mein add ho gaya aur udhar clear hai.' : `Partial payment saved. Remaining udhar: Rs. ${newAmount}.`);
@@ -950,9 +963,7 @@
                 try {
                     await supabase.from(tableName).delete().eq('id', itemId);
                 } catch(err) {
-                    const keys = { expense:'cuedesk_expenses', credit:'cuedesk_credits', sale:'cuedesk_other_sales' };
-                    const items = JSON.parse(localStorage.getItem(keys[deleteType]) || '[]');
-                    localStorage.setItem(keys[deleteType], JSON.stringify(items.filter(x => String(x.id) !== String(itemId))));
+                    alert('Error deleting item: ' + err.message);
                 }
 
                 await renderFinanceLists();
@@ -1413,28 +1424,25 @@
                         total_bill: parseFloat(bill)
                     };
 
-                    const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
-                    const now = new Date();
-                    localHistory.unshift({
-                        tableId,
-                        gameType: sessionPayload.game_type,
-                        format: sessionPayload.game_format,
-                        duration: `${durationMins} mins`,
-                        bill,
-                        paymentMode: paymentModeSelect.value,
-                        slipImage: slipBase64,
-                        timestamp: now.toISOString(),
-                        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    });
-                    localStorage.setItem('bare_tallies_history', JSON.stringify(localHistory));
-
+                    // Also save game session as an other sale record if online/cash payment includes receipt or if it needs to reflect in sales
                     try {
                         const { error } = await supabase.from('game_sessions').insert([sessionPayload]);
                         if (error) throw error;
-                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\nPayment Mode: ${paymentModeSelect.value}\nSaved to Cloud Database successfully!`);
+
+                        // If online payment with slip, save in canteen_sales with slip image so it syncs across devices
+                        if (slipBase64) {
+                            await supabase.from('canteen_sales').insert([{
+                                user_id: currentUser.id,
+                                title: `Table ${tableId} Game (${paymentModeSelect.value})`,
+                                amount: parseFloat(bill),
+                                slip_image: slipBase64
+                            }]);
+                        }
+
+                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\nPayment Mode: ${paymentModeSelect.value}\nSynced to Cloud Database successfully!`);
                     } catch (err) {
                         console.error('Database Save Error:', err.message);
-                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\nPayment Mode: ${paymentModeSelect.value}\n(Saved to Local Session History)`);
+                        alert(`Game Ended on Table ${tableId}!\nTotal Bill: Rs. ${bill}\nPayment Mode: ${paymentModeSelect.value}\n(Error syncing to cloud: ${err.message})`);
                     }
 
                     delete activeSessions[tableId];
