@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - CUEDESK</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .inventory-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin: 2rem;
+            box-shadow: var(--shadow-card);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="brand-title">CUEDESK</h1>
+                <p class="brand-subtitle">Snooker Management</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><span>🎱</span> Tables & Games</a>
+                <a href="history.html" class="nav-item"><span>📊</span> Session History</a>
+                <a href="inventory.html" class="nav-item active"><span>📦</span> Inventory & Stock</a>
+                <a href="settings.html" class="nav-item"><span>⚙️</span> Settings & Rates</a>
+            </nav>
+        </aside>
+
+        <div class="main-content">
+            <header class="top-header">
+                <h2 class="header-title" style="font-size: 1.2rem;">Inventory & Stock Management</h2>
+                <div class="owner-profile">
+                    <span class="profile-name" id="display-club-name" style="color: var(--gold-primary); font-weight: bold;">Loading...</span>
+                </div>
+            </header>
+
+            <main>
+                <div class="inventory-card">
+                    <h3 style="color: var(--gold-primary); margin-top: 0;">Add New Stock Item</h3>
+                    <form id="inventory-form">
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label">Item Name</label>
+                                <input type="text" id="item-name" class="form-input" placeholder="e.g. Cola Next, Sting, Water" required>
+                            </div>
+                            <div>
+                                <label class="form-label">Total Stock Quantity</label>
+                                <input type="number" id="item-stock" class="form-input" min="1" placeholder="50" required>
+                            </div>
+                            <div>
+                                <label class="form-label">Price Per Piece (Rs.)</label>
+                                <input type="number" id="item-price" class="form-input" min="1" step="0.01" placeholder="100" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Item to Inventory</button>
+                    </form>
+                </div>
+
+                <div class="inventory-card">
+                    <h3 style="color: var(--gold-primary); margin-top: 0;">Stock & Sales Overview</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="history-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-color); color: var(--gold-primary);">
+                                    <th style="padding: 10px;">Item Name</th>
+                                    <th style="padding: 10px;">Available Stock</th>
+                                    <th style="padding: 10px;">Price / Piece</th>
+                                    <th style="padding: 10px;">Sold Count</th>
+                                    <th style="padding: 10px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading inventory...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { window.location.href = 'index.html'; return; }
+            currentUser = user;
+
+            let clubName = currentUser.user_metadata?.club_name || 'Snooker Club';
+            document.getElementById('display-club-name').textContent = clubName;
+
+            await loadInventory();
+
+            document.getElementById('inventory-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const itemName = document.getElementById('item-name').value.trim();
+                const stock = parseInt(document.getElementById('item-stock').value);
+                const price = parseFloat(document.getElementById('item-price').value);
+
+                try {
+                    const { error } = await supabase.from('club_inventory').insert([{
+                        user_id: currentUser.id,
+                        item_name: itemName,
+                        stock: stock,
+                        price_per_piece: price,
+                        sold_count: 0
+                    }]);
+                    if (error) throw error;
+                    e.target.reset();
+                    await loadInventory();
+                    alert('Item added to inventory successfully!');
+                } catch (err) {
+                    alert('Error adding item: ' + err.message);
+                }
+            });
+        });
+
+        async function loadInventory() {
+            try {
+                const { data, error } = await supabase.from('club_inventory').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+                if (error) throw error;
+
+                const tbody = document.getElementById('inventory-table-body');
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No inventory items added yet.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 10px; font-weight: bold;">${item.item_name}</td>
+                            <td style="padding: 10px; color: #2a9d8f;">${item.stock} pieces</td>
+                            <td style="padding: 10px;">Rs. ${item.price_per_piece}</td>
+                            <td style="padding: 10px; color: var(--gold-primary);">${item.sold_count} sold</td>
+                            <td style="padding: 10px;">
+                                <button class="table-control-btn btn-add-table" onclick="sellItem('${item.id}', ${item.stock}, ${item.price_per_piece}, '${item.item_name}')">Sell 1</button>
+                                <button class="table-control-btn btn-remove-table" onclick="deleteItem('${item.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error('Error loading inventory:', err);
+            }
+        }
+
+        window.sellItem = async function(id, currentStock, price, name) {
+            if (currentStock <= 0) {
+                alert('Stock is empty!');
+                return;
+            }
+
+            const newStock = currentStock - 1;
+            try {
+                // Update stock and sold count in inventory table
+                await supabase.from('club_inventory').update({ stock: newStock, sold_count: supabase.sql`sold_count + 1` }).eq('id', id);
+                // Also log it as a canteen sale so it adds to revenue and session reports!
+                await supabase.from('canteen_sales').insert([{
+                    user_id: currentUser.id,
+                    title: `Inventory Sale: ${name}`,
+                    amount: price
+                }]);
+
+                await loadInventory();
+                alert(`Sold 1 ${name} for Rs. ${price}! Added to sales.`);
+            } catch (err) {
+                alert('Error processing sale: ' + err.message);
+            }
+        };
+
+        window.deleteItem = async function(id) {
+            if (!confirm('Are you sure you want to delete this inventory item?')) return;
+            try {
+                await supabase.from('club_inventory').delete().eq('id', id);
+                await loadInventory();
+            } catch (err) {
+                alert('Error deleting item: ' + err.message);
+            }
+        };
+    </script>
+</body>
+</html>
