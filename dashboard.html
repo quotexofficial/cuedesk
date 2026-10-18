@@ -611,8 +611,6 @@
                 </div>
             </div>
 
-            <!-- Finance records are managed in the dedicated workspace below the live tables. -->
-
             <!-- Shift Status Control Panel (Open / Close Snooker) -->
             <section class="shift-status-panel">
                 <div class="shift-info">
@@ -649,6 +647,7 @@
             <main style="padding: 0; flex: 1; margin: 1.5rem 2rem 2rem 2rem;">
                 <div class="tables-grid" id="tables-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;"></div>
             </main>
+
             <!-- Dedicated finance management workspace: edit records here; dashboard totals update automatically. -->
             <section class="finance-workspace" id="finance-manager">
                 <div class="finance-heading">
@@ -804,6 +803,7 @@
                     <select id="payment-mode-select" class="form-select">
                         <option value="CASH">💵 Cash Payment</option>
                         <option value="ONLINE">💳 Online (EasyPaisa / JazzCash / Bank)</option>
+                        <option value="CREDIT">🤝 Udhar / Credit</option>
                     </select>
                 </div>
 
@@ -865,107 +865,168 @@
             document.getElementById('open-credit-modal').addEventListener('click', () => creditModal.classList.add('active'));
             document.getElementById('credit-modal-close').addEventListener('click', () => creditModal.classList.remove('active'));
 
-            // Editable finance records (stored in this browser's localStorage)
+            let currentUser = null;
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                currentUser = user;
+                if (!currentUser) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            } catch (err) {
+                console.error("Auth check failed", err);
+            }
+
+            // Editable finance records (Supabase sync enabled)
             const saleModal = document.getElementById('sale-modal');
             document.getElementById('open-sale-modal').addEventListener('click', () => saleModal.classList.add('active'));
             document.getElementById('sale-modal-close').addEventListener('click', () => saleModal.classList.remove('active'));
 
-            document.getElementById('expense-form').addEventListener('submit', (e) => {
+            document.getElementById('expense-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const title = document.getElementById('expense-title').value.trim();
                 const amount = Number(document.getElementById('expense-amount').value || 0);
                 if (!title || amount <= 0) return alert('Valid title aur amount enter karein.');
-                const expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
-                expenses.push({ id: Date.now(), title, amount, time: new Date().toLocaleString() });
-                localStorage.setItem('cuedesk_expenses', JSON.stringify(expenses));
+                
+                try {
+                    const { error } = await supabase.from('club_expenses').insert([{ user_id: currentUser.id, title, amount }]);
+                    if (error) throw error;
+                } catch (err) {
+                    const expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
+                    expenses.push({ id: Date.now(), title, amount, time: new Date().toLocaleString() });
+                    localStorage.setItem('cuedesk_expenses', JSON.stringify(expenses));
+                }
+
                 e.target.reset(); expenseModal.classList.remove('active');
-                renderFinanceLists(); updateSmartRevenueBar();
+                await renderFinanceLists(); await updateSmartRevenueBar();
+                alert('Expense saved and synced!');
             });
 
-            document.getElementById('credit-form').addEventListener('submit', (e) => {
+            document.getElementById('credit-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const name = document.getElementById('credit-name').value.trim();
                 const amount = Number(document.getElementById('credit-amount').value || 0);
                 if (!name || amount <= 0) return alert('Valid naam aur amount enter karein.');
-                const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
-                credits.push({ id: Date.now(), name, amount, originalAmount: amount, time: new Date().toLocaleString(), status: 'pending' });
-                localStorage.setItem('cuedesk_credits', JSON.stringify(credits));
+                
+                try {
+                    const { error } = await supabase.from('club_credits').insert([{ user_id: currentUser.id, name, amount, original_amount: amount, status: 'pending' }]);
+                    if (error) throw error;
+                } catch (err) {
+                    const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
+                    credits.push({ id: Date.now(), name, amount, originalAmount: amount, time: new Date().toLocaleString(), status: 'pending' });
+                    localStorage.setItem('cuedesk_credits', JSON.stringify(credits));
+                }
+
                 e.target.reset(); creditModal.classList.remove('active');
-                renderFinanceLists(); updateSmartRevenueBar();
+                await renderFinanceLists(); await updateSmartRevenueBar();
+                alert('Credit record saved and synced!');
             });
 
-            document.getElementById('sale-form').addEventListener('submit', (e) => {
+            document.getElementById('sale-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const title = document.getElementById('sale-title').value.trim();
                 const amount = Number(document.getElementById('sale-amount').value || 0);
                 if (!title || amount <= 0) return alert('Valid title aur amount enter karein.');
-                const sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
-                sales.push({ id: Date.now(), title, amount, time: new Date().toLocaleString() });
-                localStorage.setItem('cuedesk_other_sales', JSON.stringify(sales));
+
+                try {
+                    const { error } = await supabase.from('canteen_sales').insert([{ user_id: currentUser.id, title, amount }]);
+                    if (error) throw error;
+                } catch (err) {
+                    const sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
+                    sales.push({ id: Date.now(), title, amount, time: new Date().toLocaleString() });
+                    localStorage.setItem('cuedesk_other_sales', JSON.stringify(sales));
+                }
+
                 e.target.reset(); saleModal.classList.remove('active');
-                renderFinanceLists(); updateSmartRevenueBar();
+                await renderFinanceLists(); await updateSmartRevenueBar();
+                alert('Sale saved and synced!');
             });
 
             function money(n) { return 'Rs. ' + Number(n || 0).toLocaleString('en-PK', { maximumFractionDigits: 2 }); }
-            function renderFinanceLists() {
-                const expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
-                const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
-                const sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
+            
+            async function renderFinanceLists() {
+                let expenses = [], credits = [], sales = [];
+                try {
+                    const { data: exp } = await supabase.from('club_expenses').select('*');
+                    if (exp) expenses = exp;
+                    const { data: cred } = await supabase.from('club_credits').select('*');
+                    if (cred) credits = cred;
+                    const { data: cants } = await supabase.from('canteen_sales').select('*');
+                    if (cants) sales = cants;
+                } catch (err) {
+                    expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
+                    credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
+                    sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
+                }
+
                 const expenseBox = document.getElementById('expense-list');
                 const creditBox = document.getElementById('credit-list');
                 const saleBox = document.getElementById('sale-list');
                 const rowStyle = 'display:flex;gap:.6rem;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.75rem;margin:.5rem 0;background:#121212;border:1px solid var(--border-color);border-radius:8px;';
-                expenseBox.innerHTML = expenses.length ? expenses.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.title)}</b><br><small>${escapeFinance(x.time || '')}</small></span><b>${money(x.amount)}</b><span><button class="table-control-btn" data-fin-edit="expense" data-id="${x.id}">Edit</button> <button class="table-control-btn btn-remove-table" data-fin-delete="expense" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">No expenses recorded yet.</p>';
-                creditBox.innerHTML = credits.length ? credits.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.name)}</b><br><small>${escapeFinance(x.time || '')} · ${x.status === 'paid' || Number(x.amount) <= 0 ? 'PAID' : 'PENDING'}</small></span><span>Remaining: <b>${money(x.amount)}</b></span><span>${Number(x.amount)>0 ? `<button class="table-control-btn btn-add-table" data-credit-fulfill="${x.id}">Fulfilled / Payment</button>` : ''} <button class="table-control-btn" data-fin-edit="credit" data-id="${x.id}">Edit</button> <button class="table-control-btn btn-remove-table" data-fin-delete="credit" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">Abhi koi credit / udhar nahi.</p>';
-                saleBox.innerHTML = sales.length ? sales.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.title)}</b><br><small>${escapeFinance(x.time || '')}</small></span><b>${money(x.amount)}</b><span><button class="table-control-btn" data-fin-edit="sale" data-id="${x.id}">Edit</button> <button class="table-control-btn btn-remove-table" data-fin-delete="sale" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">Abhi koi other sale nahi.</p>';
+                
+                expenseBox.innerHTML = expenses.length ? expenses.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.title)}</b><br><small>${escapeFinance(x.time || x.created_at || '')}</small></span><b>${money(x.amount)}</b><span><button class="table-control-btn btn-remove-table" data-fin-delete="expense" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">No expenses recorded yet.</p>';
+                
+                creditBox.innerHTML = credits.length ? credits.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.name)}</b><br><small>${escapeFinance(x.time || x.created_at || '')} · ${x.status === 'paid' || Number(x.amount) <= 0 ? 'PAID' : 'PENDING'}</small></span><span>Remaining: <b>${money(x.amount)}</b></span><span>${Number(x.amount)>0 ? `<button class="table-control-btn btn-add-table" data-credit-fulfill="${x.id}">Fulfilled / Payment</button>` : ''} <button class="table-control-btn btn-remove-table" data-fin-delete="credit" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">Abhi koi credit / udhar nahi.</p>';
+                
+                saleBox.innerHTML = sales.length ? sales.map(x => `<div style="${rowStyle}"><span><b>${escapeFinance(x.title)}</b><br><small>${escapeFinance(x.time || x.created_at || '')}</small></span><b>${money(x.amount)}</b><span><button class="table-control-btn btn-remove-table" data-fin-delete="sale" data-id="${x.id}">Delete</button></span></div>`).join('') : '<p style="color:var(--text-muted)">Abhi koi other sale nahi.</p>';
             }
+
             function escapeFinance(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-            document.getElementById('finance-manager').addEventListener('click', (e) => {
+            document.getElementById('finance-manager').addEventListener('click', async (e) => {
                 const fulfillId = e.target.getAttribute('data-credit-fulfill');
                 if (fulfillId) {
-                    const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
+                    let credits = [];
+                    try {
+                        const { data } = await supabase.from('club_credits').select('*');
+                        if (data) credits = data;
+                    } catch(err) {
+                        credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
+                    }
+
                     const credit = credits.find(x => String(x.id) === fulfillId);
                     if (!credit || Number(credit.amount) <= 0) return;
-                    const entered = prompt(`Customer: ${credit.name}\nRemaining udhar: Rs. ${credit.amount}\nKitni payment receive hui? (full payment ke liye ${credit.amount})`, String(credit.amount));
+                    const entered = prompt(`Customer: ${credit.name}\nRemaining udhar: Rs. ${credit.amount}\nKitni payment receive hui?`, String(credit.amount));
                     if (entered === null) return;
                     const paid = Number(entered);
                     if (!Number.isFinite(paid) || paid <= 0 || paid > Number(credit.amount)) return alert('Payment remaining udhar se zyada ya zero nahi ho sakti.');
-                    credit.amount = Math.max(0, Number(credit.amount) - paid);
-                    credit.status = credit.amount === 0 ? 'paid' : 'pending';
-                    credit.lastPayment = new Date().toLocaleString();
-                    localStorage.setItem('cuedesk_credits', JSON.stringify(credits));
-                    const sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
-                    sales.push({ id: Date.now(), title: `Credit payment received — ${credit.name}`, amount: paid, time: new Date().toLocaleString() });
-                    localStorage.setItem('cuedesk_other_sales', JSON.stringify(sales));
-                    alert(credit.amount === 0 ? 'Fully paid! Received amount sales mein add ho gaya aur udhar clear hai.' : `Partial payment saved. Remaining udhar: Rs. ${credit.amount}. Received Rs. ${paid} sales mein add kar diya.`);
-                    renderFinanceLists(); updateSmartRevenueBar(); return;
+                    
+                    const newAmount = Math.max(0, Number(credit.amount) - paid);
+                    const newStatus = newAmount === 0 ? 'paid' : 'pending';
+
+                    try {
+                        await supabase.from('club_credits').update({ amount: newAmount, status: newStatus }).eq('id', fulfillId);
+                        await supabase.from('canteen_sales').insert([{ user_id: currentUser.id, title: `Credit payment received — ${credit.name}`, amount: paid }]);
+                    } catch(err) {
+                        credit.amount = newAmount;
+                        credit.status = newStatus;
+                        localStorage.setItem('cuedesk_credits', JSON.stringify(credits));
+                        const sales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
+                        sales.push({ id: Date.now(), title: `Credit payment received — ${credit.name}`, amount: paid, time: new Date().toLocaleString() });
+                        localStorage.setItem('cuedesk_other_sales', JSON.stringify(sales));
+                    }
+
+                    alert(newAmount === 0 ? 'Fully paid! Received amount sales mein add ho gaya aur udhar clear hai.' : `Partial payment saved. Remaining udhar: Rs. ${newAmount}.`);
+                    await renderFinanceLists(); await updateSmartRevenueBar(); return;
                 }
-                const editType = e.target.getAttribute('data-fin-edit');
+
                 const deleteType = e.target.getAttribute('data-fin-delete');
-                const type = editType || deleteType;
-                if (!type) return;
-                const keys = { expense:'cuedesk_expenses', credit:'cuedesk_credits', sale:'cuedesk_other_sales' };
-                const key = keys[type], items = JSON.parse(localStorage.getItem(key) || '[]');
-                const item = items.find(x => String(x.id) === e.target.getAttribute('data-id'));
-                if (!item) return;
-                if (deleteType) {
-                    if (!confirm('Is entry ko delete karna hai?')) return;
-                    localStorage.setItem(key, JSON.stringify(items.filter(x => String(x.id) !== String(item.id))));
-                } else if (type === 'expense' || type === 'sale') {
-                    const title = prompt('Title:', item.title); if (title === null) return;
-                    const amountText = prompt('Amount (Rs.):', String(item.amount)); if (amountText === null) return;
-                    const amount = Number(amountText); if (!title.trim() || !Number.isFinite(amount) || amount < 0) return alert('Invalid title/amount.');
-                    item.title = title.trim(); item.amount = amount;
-                    localStorage.setItem(key, JSON.stringify(items));
-                } else {
-                    const name = prompt('Customer name:', item.name); if (name === null) return;
-                    const amountText = prompt('Remaining udhar (Rs.):', String(item.amount)); if (amountText === null) return;
-                    const amount = Number(amountText); if (!name.trim() || !Number.isFinite(amount) || amount < 0) return alert('Invalid name/amount.');
-                    item.name = name.trim(); item.amount = amount; item.status = amount === 0 ? 'paid' : 'pending';
-                    localStorage.setItem(key, JSON.stringify(items));
+                if (!deleteType) return;
+                if (!confirm('Is entry ko delete karna hai?')) return;
+                
+                const tableMap = { expense: 'club_expenses', credit: 'club_credits', sale: 'canteen_sales' };
+                const tableName = tableMap[deleteType];
+                const itemId = e.target.getAttribute('data-id');
+
+                try {
+                    await supabase.from(tableName).delete().eq('id', itemId);
+                } catch(err) {
+                    const keys = { expense:'cuedesk_expenses', credit:'cuedesk_credits', sale:'cuedesk_other_sales' };
+                    const items = JSON.parse(localStorage.getItem(keys[deleteType]) || '[]');
+                    localStorage.setItem(keys[deleteType], JSON.stringify(items.filter(x => String(x.id) !== String(itemId))));
                 }
-                renderFinanceLists(); updateSmartRevenueBar();
+
+                await renderFinanceLists(); await updateSmartRevenueBar();
             });
 
             await fetchSupabaseClubProfile();
@@ -987,7 +1048,6 @@
             const tablesContainer = document.getElementById('tables-container');
             const indicatorsContainer = document.getElementById('indicators-container');
 
-            // Payment Mode Dropdown Toggle listener
             paymentModeSelect.addEventListener('change', () => {
                 if (paymentModeSelect.value === 'ONLINE') {
                     slipUploadGroup.style.display = 'block';
@@ -996,18 +1056,39 @@
                 }
             });
 
-            // LIVE SMART REVENUE, EXPENSES & NET PROFIT CALCULATOR BAR
-            function updateSmartRevenueBar() {
-                const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
-                const totalGameIncome = localHistory.reduce((sum, item) => sum + Number(item.bill || 0), 0);
-                const otherSales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
-                const totalOtherSales = otherSales.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-                const expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
-                const totalExpense = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-                const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
-                const totalCredit = credits.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
+            // LIVE SMART REVENUE, EXPENSES & NET PROFIT CALCULATOR BAR (Supabase Synced)
+            async function updateSmartRevenueBar() {
+                let totalGameIncome = 0;
+                let totalOtherSales = 0;
+                let totalExpense = 0;
+                let totalCredit = 0;
+
+                try {
+                    const { data: sessions } = await supabase.from('game_sessions').select('*');
+                    if (sessions) totalGameIncome = sessions.reduce((sum, item) => sum + Number(item.total_bill || item.bill || 0), 0);
+
+                    const { data: cants } = await supabase.from('canteen_sales').select('*');
+                    if (cants) totalOtherSales = cants.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+                    const { data: exp } = await supabase.from('club_expenses').select('*');
+                    if (exp) totalExpense = exp.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+                    const { data: cred } = await supabase.from('club_credits').select('*');
+                    if (cred) totalCredit = cred.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
+                } catch (e) {
+                    const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
+                    totalGameIncome = localHistory.reduce((sum, item) => sum + Number(item.bill || 0), 0);
+                    const otherSales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
+                    totalOtherSales = otherSales.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+                    const expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
+                    totalExpense = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+                    const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
+                    totalCredit = credits.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
+                }
+
                 const totalSales = totalGameIncome + totalOtherSales;
                 const netProfit = totalSales - totalExpense;
+
                 document.getElementById('game-income-display').textContent = money(totalGameIncome);
                 document.getElementById('canteen-income-display').textContent = money(totalOtherSales);
                 document.getElementById('total-sales-display').textContent = money(totalSales);
@@ -1015,8 +1096,9 @@
                 document.getElementById('total-credit-display').textContent = money(totalCredit);
                 document.getElementById('net-profit-display').textContent = money(netProfit);
             }
-            updateSmartRevenueBar();
-            renderFinanceLists();
+            
+            await updateSmartRevenueBar();
+            await renderFinanceLists();
 
             // SHIFT OPEN / CLOSE SYSTEM
             const shiftBadge = document.getElementById('shift-badge-status');
@@ -1154,9 +1236,8 @@
             async function fetchSupabaseClubProfile() {
                 let clubName = 'Snooker Club';
                 try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (user && user.user_metadata && user.user_metadata.club_name) {
-                        clubName = user.user_metadata.club_name;
+                    if (currentUser && currentUser.user_metadata && currentUser.user_metadata.club_name) {
+                        clubName = currentUser.user_metadata.club_name;
                     }
                 } catch (e) {}
 
@@ -1194,7 +1275,6 @@
                     `;
                     indicatorsContainer.appendChild(indDiv);
 
-                    // Dynamic Neon Ring State Management
                     let cardClass = 'snooker-table-card status-free';
                     let badgeClass = 'badge badge-available';
                     let badgeText = '🟢 FREE';
@@ -1430,6 +1510,7 @@
                     }
 
                     const sessionPayload = {
+                        user_id: currentUser.id,
                         table_id: parseInt(tableId),
                         game_type: String(session.gameType).toUpperCase(),
                         game_format: session.gameType === 'century' ? 'N/A' : String(session.format).toUpperCase(),
@@ -1480,7 +1561,7 @@
                 }
 
                 updateOverviewCounts();
-                updateSmartRevenueBar();
+                await updateSmartRevenueBar();
                 renderTablesUI();
                 closeManageModal();
             });
