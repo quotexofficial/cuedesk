@@ -740,41 +740,52 @@
             <form id="game-form">
                 <input type="hidden" id="active-table-id">
                 
-                <div class="form-group" id="player-name-group">
-                    <label class="form-label">Player / Customer Name</label>
-                    <input type="text" id="game-player-name" class="form-input" placeholder="e.g. Ali Khan / Rehan" required>
+                <!-- START GAME FIELDS -->
+                <div class="form-group" id="start-game-fields">
+                    <div class="form-group">
+                        <label class="form-label">Player / Customer Name</label>
+                        <input type="text" id="game-player-name" class="form-input" placeholder="e.g. Ali Khan">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Select Game Type</label>
+                        <select id="game-type" class="form-select">
+                            <option value="one-ball">One Ball</option>
+                            <option value="six-ball">Six Ball</option>
+                            <option value="full-frame">Full Frame</option>
+                            <option value="century">Century (Time Based)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="format-group">
+                        <label class="form-label">Game Format</label>
+                        <select id="game-format" class="form-select">
+                            <option value="single">Single</option>
+                            <option value="double">Double</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group" id="game-type-group">
-                    <label class="form-label">Select Game Type</label>
-                    <select id="game-type" class="form-select" required>
-                        <option value="one-ball">One Ball</option>
-                        <option value="six-ball">Six Ball</option>
-                        <option value="full-frame">Full Frame</option>
-                        <option value="century">Century (Time Based)</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="format-group">
-                    <label class="form-label">Game Format</label>
-                    <select id="game-format" class="form-select">
-                        <option value="single">Single</option>
-                        <option value="double">Double</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="payment-mode-group" style="display: none;">
-                    <label class="form-label">Payment Mode</label>
-                    <select id="payment-mode-select" class="form-select">
-                        <option value="CASH">💵 Cash Payment</option>
-                        <option value="ONLINE">💳 Online (EasyPaisa / JazzCash / Bank)</option>
-                        <option value="CREDIT">🤝 Udhar / Credit</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="slip-upload-group" style="display: none;">
-                    <label class="form-label">Upload Online Transaction Receipt / Slip</label>
-                    <input type="file" id="slip-file-input" class="form-input-file" accept="image/*">
+                <!-- STOP & BILL / PAYMENT FIELDS -->
+                <div class="form-group" id="stop-game-fields" style="display: none;">
+                    <div style="background: rgba(212,175,55,0.08); padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
+                        <p style="margin:0 0 0.3rem 0; font-size:0.85rem; color:var(--text-muted);">Active Game Info:</p>
+                        <div id="active-summary-text" style="font-weight: bold; color: var(--gold-primary);">Loading game info...</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Player / Customer Name</label>
+                        <input type="text" id="stop-player-name" class="form-input" placeholder="Player Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Mode</label>
+                        <select id="payment-mode-select" class="form-select">
+                            <option value="CASH">💵 Cash Payment</option>
+                            <option value="ONLINE">💳 Online (EasyPaisa / JazzCash / Bank)</option>
+                            <option value="CREDIT">🤝 Udhar / Credit</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="slip-upload-group" style="display: none;">
+                        <label class="form-label">Upload Online Transaction Receipt / Slip</label>
+                        <input type="file" id="slip-file-input" class="form-input-file" accept="image/*">
+                    </div>
                 </div>
 
                 <div id="price-preview" style="background: rgba(212,175,55,0.08); padding: 0.75rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--gold-light);">
@@ -1099,12 +1110,14 @@
 
             const timerIntervals = {};
             const modal = document.getElementById('manage-modal');
+            const startGameFields = document.getElementById('start-game-fields');
+            const stopGameFields = document.getElementById('stop-game-fields');
             const playerNameInput = document.getElementById('game-player-name');
-            const playerNameGroup = document.getElementById('player-name-group');
+            const stopPlayerNameInput = document.getElementById('stop-player-name');
+            const activeSummaryText = document.getElementById('active-summary-text');
             const gameTypeSelect = document.getElementById('game-type');
             const formatGroup = document.getElementById('format-group');
             const formatSelect = document.getElementById('game-format');
-            const paymentModeGroup = document.getElementById('payment-mode-group');
             const paymentModeSelect = document.getElementById('payment-mode-select');
             const slipUploadGroup = document.getElementById('slip-upload-group');
             const slipFileInput = document.getElementById('slip-file-input');
@@ -1480,22 +1493,31 @@
                 const activeSessions = state ? (state.active_sessions || {}) : {};
                 
                 if (activeSessions[tableId]) {
+                    // STOP & BILL MODE (Only show active game details, player name edit, and payment)
+                    startGameFields.style.display = 'none';
+                    stopGameFields.style.display = 'block';
+                    pricePreview.style.display = 'none';
+
+                    const session = activeSessions[tableId];
+                    stopPlayerNameInput.value = session.playerName || '';
+                    activeSummaryText.textContent = `Game: ${session.gameType.toUpperCase()} (${session.format.toUpperCase()}) Started at ${new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
                     modalActionBtn.textContent = 'End Game & Process Payment';
                     modalActionBtn.style.background = '#e76f51';
-                    playerNameGroup.style.display = 'none';
-                    paymentModeGroup.style.display = 'block';
                     if (paymentModeSelect.value === 'ONLINE') {
                         slipUploadGroup.style.display = 'block';
                     }
                 } else {
+                    // START GAME MODE (Show player name and full game selection menu)
+                    startGameFields.style.display = 'block';
+                    stopGameFields.style.display = 'none';
+                    pricePreview.style.display = 'block';
+
+                    playerNameInput.value = '';
                     modalActionBtn.textContent = 'Start Game';
                     modalActionBtn.style.background = 'linear-gradient(135deg, var(--gold-primary), var(--gold-dark))';
-                    playerNameGroup.style.display = 'block';
-                    playerNameInput.value = '';
-                    paymentModeGroup.style.display = 'none';
-                    slipUploadGroup.style.display = 'none';
+                    updateFormatOptions();
                 }
-                updateFormatOptions();
                 modal.classList.add('active');
             }
 
@@ -1535,16 +1557,15 @@
             document.getElementById('game-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const tableId = activeTableInput.value;
-                const gameType = gameTypeSelect.value;
-                const format = formatSelect.value;
-                const rates = getRates();
-                
                 const state = await getClubState();
                 let activeSessions = state ? (state.active_sessions || {}) : {};
 
                 if (activeSessions[tableId]) {
+                    // STOP & BILL EXECUTION
                     clearInterval(timerIntervals[tableId]);
                     const session = activeSessions[tableId];
+                    const rates = getRates();
+
                     const durationSecs = Math.floor((Date.now() - session.startTime) / 1000);
                     const durationMins = Math.max(1, Math.ceil(durationSecs / 60));
 
@@ -1557,8 +1578,11 @@
                         bill = session.format === 'single' ? rates.oneballSingle : rates.oneballDouble;
                     }
 
+                    const finalPlayerName = stopPlayerNameInput.value.trim() || session.playerName || 'Walk-in Player';
+                    const paymentMode = paymentModeSelect.value;
+
                     let slipBase64 = null;
-                    if (paymentModeSelect.value === 'ONLINE' && slipFileInput.files[0]) {
+                    if (paymentMode === 'ONLINE' && slipFileInput.files[0]) {
                         try {
                             slipBase64 = await convertBase64(slipFileInput.files[0]);
                         } catch (err) {
@@ -1569,11 +1593,12 @@
                     const sessionPayload = {
                         user_id: currentUser.id,
                         table_id: parseInt(tableId),
-                        player_name: session.playerName || 'Walk-in Player',
+                        player_name: finalPlayerName,
                         game_type: String(session.gameType).toUpperCase(),
                         game_format: session.gameType === 'century' ? 'N/A' : String(session.format).toUpperCase(),
                         duration_minutes: parseInt(durationMins),
-                        total_bill: parseFloat(bill)
+                        total_bill: parseFloat(bill),
+                        payment_mode: paymentMode
                     };
 
                     closeManageModal();
@@ -1583,10 +1608,21 @@
                             const { error } = await supabase.from('game_sessions').insert([sessionPayload]);
                             if (error) throw error;
 
+                            // If payment mode is CREDIT, save it to customer credits ledger as well
+                            if (paymentMode === 'CREDIT') {
+                                await supabase.from('club_credits').insert([{
+                                    user_id: currentUser.id,
+                                    name: finalPlayerName,
+                                    amount: parseFloat(bill),
+                                    original_amount: parseFloat(bill),
+                                    status: 'pending'
+                                }]);
+                            }
+
                             if (slipBase64) {
                                 await supabase.from('canteen_sales').insert([{
                                     user_id: currentUser.id,
-                                    title: `Table ${tableId} Game (${session.playerName})`,
+                                    title: `Table ${tableId} Game (${finalPlayerName})`,
                                     amount: parseFloat(bill),
                                     slip_image: slipBase64
                                 }]);
@@ -1604,13 +1640,17 @@
                     });
 
                 } else {
+                    // START GAME EXECUTION
                     if (!state || !state.shift_open) {
                         alert('Please click "Open Snooker Club" at the top before starting games!');
                         return;
                     }
 
                     const playerName = playerNameInput.value.trim() || 'Walk-in Player';
+                    const gameType = gameTypeSelect.value;
+                    const format = formatSelect.value;
                     const startTime = Date.now();
+
                     activeSessions[tableId] = { startTime, gameType, format, playerName };
                     await updateClubState({ active_sessions: activeSessions });
                     
