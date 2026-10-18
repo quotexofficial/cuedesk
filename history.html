@@ -81,15 +81,6 @@
             text-transform: uppercase;
             font-size: 0.85rem;
         }
-        .date-divider-row td {
-            background: rgba(212, 175, 55, 0.12) !important;
-            color: var(--gold-primary) !important;
-            font-weight: bold;
-            font-size: 0.95rem;
-            border-top: 2px solid var(--gold-primary);
-            border-bottom: 2px solid var(--gold-primary);
-            padding: 0.75rem 1rem;
-        }
         .payment-pill {
             padding: 0.25rem 0.6rem;
             border-radius: 4px;
@@ -116,7 +107,6 @@
             cursor: pointer;
         }
 
-        /* Image Slip Modal */
         .slip-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
@@ -165,7 +155,7 @@
                 <div class="history-card">
                     <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                         <div class="current-date-badge" id="today-display-badge">📅 Loading Date...</div>
-                        <span style="color: var(--text-muted); font-size: 0.85rem;">24-Hour Sync & Payment Slips</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Cloud Sync & Real-time Records</span>
                     </div>
 
                     <div class="history-header">
@@ -195,7 +185,7 @@
                                 </tr>
                             </thead>
                             <tbody id="history-rows">
-                                <tr><td colspan="8" style="text-align:center; color: var(--text-muted);">Loading sessions...</td></tr>
+                                <tr><td colspan="8" style="text-align:center; color: var(--text-muted);">Loading sessions from cloud...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -218,6 +208,7 @@
         import { supabase } from './js/supabase.js';
 
         let allSessions = [];
+        let currentUser = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             const now = new Date();
@@ -230,6 +221,33 @@
             const day = String(now.getDate()).padStart(2, '0');
             datePicker.value = `${year}-${month}-${day}`;
 
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session && session.user) {
+                    currentUser = session.user;
+                } else {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) currentUser = user;
+                }
+
+                if (!currentUser) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Club Name profile display
+                let clubName = 'Snooker Club';
+                if (currentUser.user_metadata && currentUser.user_metadata.club_name) {
+                    clubName = currentUser.user_metadata.club_name;
+                }
+                document.getElementById('display-club-name').textContent = clubName;
+
+            } catch (err) {
+                console.error("Auth check failed", err);
+                window.location.href = 'index.html';
+                return;
+            }
+
             await fetchAllSessions();
 
             datePicker.addEventListener('change', () => filterAndRenderHistory(datePicker.value));
@@ -241,12 +259,53 @@
             document.getElementById('close-slip-modal').addEventListener('click', () => {
                 document.getElementById('slip-modal').classList.remove('active');
             });
+
+            // Realtime sync channel for sessions updates
+            try {
+                supabase.channel('history-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions' }, async () => {
+                        await fetchAllSessions();
+                    })
+                    .subscribe();
+            } catch (e) {
+                console.log('Realtime error:', e);
+            }
         });
 
         async function fetchAllSessions() {
-            allSessions = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
-            const activePickerDate = document.getElementById('history-date-picker').value;
-            filterAndRenderHistory(activePickerDate);
+            try {
+                const { data, error } = await supabase
+                    .from('game_sessions')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                allSessions = data || [];
+
+                // Fetch canteen sales for slips matching titles if needed, or link via slip images in canteen sales
+                const { data: salesData } = await supabase
+                    .from('canteen_sales')
+                    .select('*')
+                    .eq('user_id', currentUser.id);
+                
+                // Map slip images if available from canteen sales
+                if (salesData) {
+                    allSessions = allSessions.map(sess => {
+                        const matchedSale = salesData.find(sale => sale.title && sale.title.includes(`Table ${sess.table_id}`) && sale.amount == sess.total_bill);
+                        return {
+                            ...sess,
+                            slip_image: matchedSale ? matchedSale.slip_image : null
+                        };
+                    });
+                }
+
+                const activePickerDate = document.getElementById('history-date-picker').value;
+                filterAndRenderHistory(activePickerDate);
+            } catch (err) {
+                console.error('Error fetching sessions from Supabase:', err.message);
+                document.getElementById('history-rows').innerHTML = `<tr><td colspan="8" style="text-align:center; color: #e76f51;">Error loading sessions from cloud.</td></tr>`;
+            }
         }
 
         function filterAndRenderHistory(selectedDate) {
@@ -257,7 +316,7 @@
 
             if (selectedDate) {
                 filtered = allSessions.filter(s => {
-                    const d = s.timestamp ? new Date(s.timestamp) : new Date();
+                    const d = s.created_at ? new Date(s.created_at) : new Date();
                     const sessionYear = d.getFullYear();
                     const sessionMonth = String(d.getMonth() + 1).padStart(2, '0');
                     const sessionDay = String(d.getDate()).padStart(2, '0');
@@ -275,22 +334,24 @@
             let totalRevenue = 0;
 
             filtered.forEach((session, index) => {
-                totalRevenue += parseFloat(session.bill || 0);
+                totalRevenue += parseFloat(session.total_bill || 0);
 
-                const payMode = session.paymentMode === 'ONLINE' ? '<span class="payment-pill pay-online">💳 ONLINE</span>' : '<span class="payment-pill pay-cash">💵 CASH</span>';
+                const paymentModeText = session.payment_mode || 'CASH';
+                const payMode = paymentModeText === 'ONLINE' ? '<span class="payment-pill pay-online">💳 ONLINE</span>' : '<span class="payment-pill pay-cash">💵 CASH</span>';
                 
-                const slipAction = session.slipImage ? `<button class="view-slip-btn" onclick="openSlipViewer('${index}')">📷 View Slip</button>` : 'N/A';
+                const slipAction = session.slip_image ? `<button class="view-slip-btn" onclick="openSlipViewer('${index}')">📷 View Slip</button>` : 'N/A';
+                const timeEnded = session.created_at ? new Date(session.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--';
 
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>Table ${session.tableId}</strong></td>
-                        <td>${session.gameType}</td>
-                        <td>${session.format}</td>
-                        <td>${session.duration}</td>
-                        <td style="color: var(--gold-primary); font-weight: bold;">Rs. ${session.bill}</td>
+                        <td><strong>Table ${session.table_id}</strong></td>
+                        <td>${session.game_type}</td>
+                        <td>${session.game_format}</td>
+                        <td>${session.duration_minutes} mins</td>
+                        <td style="color: var(--gold-primary); font-weight: bold;">Rs. ${session.total_bill}</td>
                         <td>${payMode}</td>
                         <td>${slipAction}</td>
-                        <td>${session.time}</td>
+                        <td>${timeEnded}</td>
                     </tr>
                 `;
             });
@@ -300,8 +361,8 @@
 
         window.openSlipViewer = function(index) {
             const session = allSessions[index];
-            if (session && session.slipImage) {
-                document.getElementById('slip-modal-image').src = session.slipImage;
+            if (session && session.slip_image) {
+                document.getElementById('slip-modal-image').src = session.slip_image;
                 document.getElementById('slip-modal').classList.add('active');
             }
         };
