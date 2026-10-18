@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - CUEDESK</title>
+    <title>Dashboard - CUEDESK by Rehan</title>
     
     <script type="importmap">
       {
@@ -543,7 +543,7 @@
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <h1 class="brand-title">CUEDESK</h1>
-                <p class="brand-subtitle">Snooker Management</p>
+                <p class="brand-subtitle">Snooker Management by Rehan</p>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-item active"><span>🎱</span> Tables & Games</a>
@@ -638,13 +638,29 @@
         </div>
     </div>
 
-    <!-- Apple Success Sound & Animation Overlay -->
+    <!-- Apple Style Purchase Success Animation Overlay -->
     <div id="apple-success-overlay">
         <div class="apple-success-box">
             <div class="apple-check-icon">✓</div>
             <h3 style="color: var(--gold-primary); margin: 0 0 0.5rem 0; font-size: 1.4rem;">Payment Processed</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Table Bill Successfully Paid</p>
             <div class="apple-animated-amount" id="apple-animated-amount">Rs. 0</div>
+        </div>
+    </div>
+
+    <!-- Bill Receipt Modal after Animation -->
+    <div id="bill-receipt-modal" class="modal-overlay">
+        <div class="modal-card" style="text-align: center; max-width: 420px;">
+            <button class="modal-close" id="bill-receipt-close">&times;</button>
+            <h3 style="color: var(--gold-primary); margin-top: 0; font-size: 1.3rem;">🎱 SNOOKER GAME BILL</h3>
+            <div id="bill-receipt-content" style="background: #121212; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: left; margin: 1rem 0; font-size: 0.95rem; line-height: 1.6;">
+                <!-- Dynamically populated bill details -->
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-primary" id="print-bill-btn" style="flex: 1; background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark)); color: #000; font-weight: bold;">🖨️ Print Bill</button>
+                <button type="button" class="btn" id="bill-close-btn" style="background: #2a2a2a; color: var(--text-main); flex: 1;">Close</button>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem; margin-bottom: 0;">CUEDESK by Rehan</p>
         </div>
     </div>
 
@@ -728,7 +744,20 @@
 
         <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 10px;">
             <h2 style="margin: 0; font-size: 20px;" id="pdf-total-revenue">Total Revenue: Rs. 0</h2>
-            <p style="font-size: 11px; margin-top: 5px; color: #666;">Generated via CUEDESK Snooker Management System</p>
+            <p style="font-size: 11px; margin-top: 5px; color: #666;">CUEDESK by Rehan</p>
+        </div>
+    </div>
+
+    <!-- Printable Single Bill Box -->
+    <div id="printable-single-bill" style="display: none;">
+        <div style="text-align: center; padding: 20px; font-family: monospace; color: #000; background: #fff;">
+            <h2 id="print-bill-club" style="margin: 0 0 5px 0;">CUEDESK SNOOKER CLUB</h2>
+            <p style="margin: 0; font-size: 12px;">Snooker Game Session Bill</p>
+            <hr style="border: dashed 1px #000; margin: 10px 0;">
+            <div id="print-bill-body" style="text-align: left; font-size: 14px; line-height: 1.5;"></div>
+            <hr style="border: dashed 1px #000; margin: 10px 0;">
+            <p style="font-size: 12px; margin: 5px 0;">Thank you! Visit Again</p>
+            <p style="font-size: 10px; margin: 0;">CUEDESK by Rehan</p>
         </div>
     </div>
 
@@ -740,12 +769,8 @@
             <form id="game-form">
                 <input type="hidden" id="active-table-id">
                 
-                <!-- START GAME FIELDS -->
+                <!-- START GAME FIELDS (Name field removed for instant start) -->
                 <div class="form-group" id="start-game-fields">
-                    <div class="form-group">
-                        <label class="form-label">Player / Customer Name</label>
-                        <input type="text" id="game-player-name" class="form-input" placeholder="e.g. Ali Khan">
-                    </div>
                     <div class="form-group">
                         <label class="form-label">Select Game Type</label>
                         <select id="game-type" class="form-select">
@@ -764,15 +789,15 @@
                     </div>
                 </div>
 
-                <!-- STOP & BILL / PAYMENT FIELDS -->
+                <!-- STOP & BILL / PAYMENT FIELDS (Player Name optional here) -->
                 <div class="form-group" id="stop-game-fields" style="display: none;">
                     <div style="background: rgba(212,175,55,0.08); padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
                         <p style="margin:0 0 0.3rem 0; font-size:0.85rem; color:var(--text-muted);">Active Game Info:</p>
                         <div id="active-summary-text" style="font-weight: bold; color: var(--gold-primary);">Loading game info...</div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Player / Customer Name</label>
-                        <input type="text" id="stop-player-name" class="form-input" placeholder="Enter Player Name" required>
+                        <label class="form-label">Player / Customer Name (Optional)</label>
+                        <input type="text" id="stop-player-name" class="form-input" placeholder="e.g. Ali Khan (Leave blank for Walk-in)">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Payment Mode</label>
@@ -840,6 +865,7 @@
             const expenseModal = document.getElementById('expense-modal');
             const creditModal = document.getElementById('credit-modal');
             const slipModal = document.getElementById('slip-modal');
+            const billReceiptModal = document.getElementById('bill-receipt-modal');
 
             document.getElementById('open-expense-modal').addEventListener('click', () => expenseModal.classList.add('active'));
             document.getElementById('expense-modal-close').addEventListener('click', () => expenseModal.classList.remove('active'));
@@ -847,6 +873,9 @@
             document.getElementById('open-credit-modal').addEventListener('click', () => creditModal.classList.add('active'));
             document.getElementById('credit-modal-close').addEventListener('click', () => creditModal.classList.remove('active'));
             document.getElementById('slip-modal-close').addEventListener('click', () => slipModal.classList.remove('active'));
+            
+            document.getElementById('bill-receipt-close').addEventListener('click', () => billReceiptModal.classList.remove('active'));
+            document.getElementById('bill-close-btn').addEventListener('click', () => billReceiptModal.classList.remove('active'));
 
             let currentUser = null;
             try {
@@ -908,7 +937,7 @@
                 }
             }
 
-            function playApplePurchaseAnimation(finalAmount, onComplete) {
+            function playApplePurchaseAnimation(finalAmount, billDetails, onComplete) {
                 const overlay = document.getElementById('apple-success-overlay');
                 const amountElem = document.getElementById('apple-animated-amount');
                 
@@ -932,9 +961,53 @@
 
                 setTimeout(() => {
                     overlay.classList.remove('active');
+                    
+                    // Show Bill Modal with Print option after animation
+                    showBillReceiptModal(billDetails);
+
                     if (typeof onComplete === 'function') onComplete();
                 }, 1400);
             }
+
+            let lastPrintedBillData = null;
+            function showBillReceiptModal(details) {
+                lastPrintedBillData = details;
+                const contentDiv = document.getElementById('bill-receipt-content');
+                contentDiv.innerHTML = `
+                    <div><b>Table:</b> Table ${details.tableId}</div>
+                    <div><b>Player:</b> ${details.playerName}</div>
+                    <div><b>Game Type:</b> ${details.gameType}</div>
+                    <div><b>Format:</b> ${details.format}</div>
+                    <div><b>Duration:</b> ${details.durationMins} minutes</div>
+                    <div><b>Payment Mode:</b> ${details.paymentMode}</div>
+                    <div style="margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 1.1rem; color: var(--gold-primary);"><b>Total Bill: Rs. ${details.bill}</b></div>
+                `;
+                billReceiptModal.classList.add('active');
+            }
+
+            document.getElementById('print-bill-btn').addEventListener('click', () => {
+                if (!lastPrintedBillData) return;
+                const d = lastPrintedBillData;
+                const clubName = document.getElementById('display-club-name').textContent || 'CUEDESK SNOOKER CLUB';
+                
+                document.getElementById('print-bill-club').textContent = clubName.toUpperCase();
+                document.getElementById('print-bill-body').innerHTML = `
+                    <b>Date/Time:</b> ${new Date().toLocaleString()}<br>
+                    <b>Table No:</b> Table ${d.tableId}<br>
+                    <b>Player Name:</b> ${d.playerName}<br>
+                    <b>Game Type:</b> ${d.gameType}<br>
+                    <b>Format:</b> ${d.format}<br>
+                    <b>Duration:</b> ${d.durationMins} Mins<br>
+                    <b>Payment:</b> ${d.paymentMode}<br>
+                    -----------------------------------<br>
+                    <b>TOTAL AMOUNT: Rs. ${d.bill}</b>
+                `;
+
+                const printDiv = document.getElementById('printable-single-bill');
+                printDiv.style.display = 'block';
+                window.print();
+                printDiv.style.display = 'none';
+            });
 
             async function getClubState() {
                 try {
@@ -1112,7 +1185,6 @@
             const modal = document.getElementById('manage-modal');
             const startGameFields = document.getElementById('start-game-fields');
             const stopGameFields = document.getElementById('stop-game-fields');
-            const playerNameInput = document.getElementById('game-player-name');
             const stopPlayerNameInput = document.getElementById('stop-player-name');
             const activeSummaryText = document.getElementById('active-summary-text');
             const gameTypeSelect = document.getElementById('game-type');
@@ -1493,7 +1565,7 @@
                 const activeSessions = state ? (state.active_sessions || {}) : {};
                 
                 if (activeSessions[tableId]) {
-                    // STOP & BILL MODE (Only show active game details, player name edit, and payment)
+                    // STOP & BILL MODE
                     startGameFields.style.display = 'none';
                     stopGameFields.style.display = 'block';
                     pricePreview.style.display = 'none';
@@ -1508,12 +1580,11 @@
                         slipUploadGroup.style.display = 'block';
                     }
                 } else {
-                    // START GAME MODE (Show player name and full game selection menu)
+                    // START GAME MODE (Name field completely removed)
                     startGameFields.style.display = 'block';
                     stopGameFields.style.display = 'none';
                     pricePreview.style.display = 'block';
 
-                    playerNameInput.value = '';
                     modalActionBtn.textContent = 'Start Game';
                     modalActionBtn.style.background = 'linear-gradient(135deg, var(--gold-primary), var(--gold-dark))';
                     updateFormatOptions();
@@ -1603,7 +1674,17 @@
 
                     closeManageModal();
 
-                    playApplePurchaseAnimation(bill, async () => {
+                    const billDetails = {
+                        tableId,
+                        playerName: finalPlayerName,
+                        gameType: String(session.gameType).toUpperCase(),
+                        format: session.gameType === 'century' ? 'N/A' : String(session.format).toUpperCase(),
+                        durationMins,
+                        paymentMode,
+                        bill
+                    };
+
+                    playApplePurchaseAnimation(bill, billDetails, async () => {
                         try {
                             const { error } = await supabase.from('game_sessions').insert([sessionPayload]);
                             if (error) throw error;
@@ -1639,16 +1720,16 @@
                     });
 
                 } else {
-                    // START GAME EXECUTION
+                    // START GAME EXECUTION (Instant start without name requirement)
                     if (!state || !state.shift_open) {
                         alert('Please click "Open Snooker Club" at the top before starting games!');
                         return;
                     }
 
-                    const playerName = playerNameInput.value.trim() || 'Walk-in Player';
                     const gameType = gameTypeSelect.value;
                     const format = formatSelect.value;
                     const startTime = Date.now();
+                    const playerName = 'Walk-in Player';
 
                     activeSessions[tableId] = { startTime, gameType, format, playerName };
                     await updateClubState({ active_sessions: activeSessions });
