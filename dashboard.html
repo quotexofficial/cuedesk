@@ -716,7 +716,7 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <thead>
                 <tr style="background: #f0f0f0;">
-                    <th style="border: 1px solid #ccc; padding: 8px;">Source / Table</th>
+                    <th style="border: 1px solid #ccc; padding: 8px;">Source / Table & Player</th>
                     <th style="border: 1px solid #ccc; padding: 8px;">Game / Item</th>
                     <th style="border: 1px solid #ccc; padding: 8px;">Format</th>
                     <th style="border: 1px solid #ccc; padding: 8px;">Duration / Qty</th>
@@ -740,6 +740,11 @@
             <form id="game-form">
                 <input type="hidden" id="active-table-id">
                 
+                <div class="form-group" id="player-name-group">
+                    <label class="form-label">Player / Customer Name</label>
+                    <input type="text" id="game-player-name" class="form-input" placeholder="e.g. Ali Khan / Rehan" required>
+                </div>
+
                 <div class="form-group" id="game-type-group">
                     <label class="form-label">Select Game Type</label>
                     <select id="game-type" class="form-select" required>
@@ -1094,6 +1099,8 @@
 
             const timerIntervals = {};
             const modal = document.getElementById('manage-modal');
+            const playerNameInput = document.getElementById('game-player-name');
+            const playerNameGroup = document.getElementById('player-name-group');
             const gameTypeSelect = document.getElementById('game-type');
             const formatGroup = document.getElementById('format-group');
             const formatSelect = document.getElementById('game-format');
@@ -1180,11 +1187,9 @@
                 const endTime = Date.now();
                 const clubName = localStorage.getItem('cuedesk_club_name') || 'CUEDESK SNOOKER CLUB';
                 
-                // Fetch Table Sessions for this shift
                 const { data: sessionHistory } = await supabase.from('game_sessions').select('*').eq('user_id', currentUser.id).gte('created_at', new Date(startTime).toISOString());
                 const shiftSessions = sessionHistory || [];
 
-                // Fetch Inventory / Canteen Sales for this shift
                 const { data: salesHistory } = await supabase.from('canteen_sales').select('*').eq('user_id', currentUser.id).gte('created_at', new Date(startTime).toISOString());
                 const shiftSales = salesHistory || [];
 
@@ -1195,12 +1200,12 @@
                 if (shiftSessions.length === 0 && shiftSales.length === 0) {
                     pdfBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 10px;">No games or sales recorded in this shift.</td></tr>`;
                 } else {
-                    // Add Table Sessions to PDF
                     shiftSessions.forEach(s => {
                         shiftTotal += parseFloat(s.total_bill);
+                        const playerName = s.player_name ? ` (${s.player_name})` : '';
                         pdfBody.innerHTML += `
                             <tr>
-                                <td style="border: 1px solid #ccc; padding: 6px; text-align: center;">Table ${s.table_id}</td>
+                                <td style="border: 1px solid #ccc; padding: 6px; text-align: center;">Table ${s.table_id}<strong>${playerName}</strong></td>
                                 <td style="border: 1px solid #ccc; padding: 6px;">${s.game_type}</td>
                                 <td style="border: 1px solid #ccc; padding: 6px;">${s.game_format}</td>
                                 <td style="border: 1px solid #ccc; padding: 6px;">${s.duration_minutes} mins</td>
@@ -1209,7 +1214,6 @@
                         `;
                     });
 
-                    // Add Inventory/Canteen Sales to PDF
                     shiftSales.forEach(sal => {
                         shiftTotal += parseFloat(sal.amount);
                         pdfBody.innerHTML += `
@@ -1344,7 +1348,7 @@
                     cardDiv.setAttribute('data-table-id', i);
                     cardDiv.innerHTML = `
                         <div class="table-info-header">
-                            <h3 class="table-name">Table ${i}</h3>
+                            <h3 class="table-name">Table ${i} ${session && session.playerName ? `<small style="font-size:0.8rem; color:var(--gold-primary);">(${session.playerName})</small>` : ''}</h3>
                             <span class="${badgeClass}" id="status-badge-${i}">${badgeText}</span>
                         </div>
                         <div class="table-image-wrapper">
@@ -1478,6 +1482,7 @@
                 if (activeSessions[tableId]) {
                     modalActionBtn.textContent = 'End Game & Process Payment';
                     modalActionBtn.style.background = '#e76f51';
+                    playerNameGroup.style.display = 'none';
                     paymentModeGroup.style.display = 'block';
                     if (paymentModeSelect.value === 'ONLINE') {
                         slipUploadGroup.style.display = 'block';
@@ -1485,6 +1490,8 @@
                 } else {
                     modalActionBtn.textContent = 'Start Game';
                     modalActionBtn.style.background = 'linear-gradient(135deg, var(--gold-primary), var(--gold-dark))';
+                    playerNameGroup.style.display = 'block';
+                    playerNameInput.value = '';
                     paymentModeGroup.style.display = 'none';
                     slipUploadGroup.style.display = 'none';
                 }
@@ -1562,6 +1569,7 @@
                     const sessionPayload = {
                         user_id: currentUser.id,
                         table_id: parseInt(tableId),
+                        player_name: session.playerName || 'Walk-in Player',
                         game_type: String(session.gameType).toUpperCase(),
                         game_format: session.gameType === 'century' ? 'N/A' : String(session.format).toUpperCase(),
                         duration_minutes: parseInt(durationMins),
@@ -1578,7 +1586,7 @@
                             if (slipBase64) {
                                 await supabase.from('canteen_sales').insert([{
                                     user_id: currentUser.id,
-                                    title: `Table ${tableId} Game (${paymentModeSelect.value})`,
+                                    title: `Table ${tableId} Game (${session.playerName})`,
                                     amount: parseFloat(bill),
                                     slip_image: slipBase64
                                 }]);
@@ -1601,8 +1609,9 @@
                         return;
                     }
 
+                    const playerName = playerNameInput.value.trim() || 'Walk-in Player';
                     const startTime = Date.now();
-                    activeSessions[tableId] = { startTime, gameType, format };
+                    activeSessions[tableId] = { startTime, gameType, format, playerName };
                     await updateClubState({ active_sessions: activeSessions });
                     
                     startTimerUI(tableId, startTime);
