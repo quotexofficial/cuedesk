@@ -829,7 +829,6 @@
         import { supabase } from './js/supabase.js';
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Mobile Sidebar Toggle
             const mobileToggle = document.getElementById('mobile-menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -845,7 +844,6 @@
                 });
             }
 
-            // Reports Drawer Controls
             const reportsDrawer = document.getElementById('reports-drawer');
             document.getElementById('toggle-reports-btn').addEventListener('click', () => {
                 reportsDrawer.classList.add('active');
@@ -855,7 +853,6 @@
                 reportsDrawer.classList.remove('active');
             });
 
-            // Expense & Credit Modals Controls
             const expenseModal = document.getElementById('expense-modal');
             const creditModal = document.getElementById('credit-modal');
 
@@ -877,7 +874,6 @@
                 console.error("Auth check failed", err);
             }
 
-            // Editable finance records (Supabase sync enabled)
             const saleModal = document.getElementById('sale-modal');
             document.getElementById('open-sale-modal').addEventListener('click', () => saleModal.classList.add('active'));
             document.getElementById('sale-modal-close').addEventListener('click', () => saleModal.classList.remove('active'));
@@ -899,7 +895,7 @@
 
                 e.target.reset(); expenseModal.classList.remove('active');
                 await renderFinanceLists(); await updateSmartRevenueBar();
-                alert('Expense saved and synced!');
+                alert('Expense saved and synced across devices!');
             });
 
             document.getElementById('credit-form').addEventListener('submit', async (e) => {
@@ -919,7 +915,7 @@
 
                 e.target.reset(); creditModal.classList.remove('active');
                 await renderFinanceLists(); await updateSmartRevenueBar();
-                alert('Credit record saved and synced!');
+                alert('Credit record saved and synced across devices!');
             });
 
             document.getElementById('sale-form').addEventListener('submit', async (e) => {
@@ -939,7 +935,7 @@
 
                 e.target.reset(); saleModal.classList.remove('active');
                 await renderFinanceLists(); await updateSmartRevenueBar();
-                alert('Sale saved and synced!');
+                alert('Sale saved and synced across devices!');
             });
 
             function money(n) { return 'Rs. ' + Number(n || 0).toLocaleString('en-PK', { maximumFractionDigits: 2 }); }
@@ -1100,7 +1096,18 @@
             await updateSmartRevenueBar();
             await renderFinanceLists();
 
-            // SHIFT OPEN / CLOSE SYSTEM
+            // Real-time synchronization subscription for multi-device live updates
+            try {
+                supabase.channel('public-db-changes')
+                    .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
+                        await updateSmartRevenueBar();
+                        await renderFinanceLists();
+                    })
+                    .subscribe();
+            } catch (err) {
+                console.log('Realtime sync setup info:', err);
+            }
+
             const shiftBadge = document.getElementById('shift-badge-status');
             const shiftTimeLabel = document.getElementById('shift-time-label');
             const shiftStartText = document.getElementById('shift-start-time-text');
@@ -1484,7 +1491,6 @@
                 let activeSessions = JSON.parse(localStorage.getItem('bt_active_sessions') || '{}');
 
                 if (activeSessions[tableId]) {
-                    // END GAME
                     clearInterval(timerIntervals[tableId]);
                     const session = activeSessions[tableId];
                     const durationSecs = Math.floor((Date.now() - session.startTime) / 1000);
@@ -1499,7 +1505,6 @@
                         bill = session.format === 'single' ? rates.oneballSingle : rates.oneballDouble;
                     }
 
-                    // Convert uploaded slip image to Base64 if Online
                     let slipBase64 = null;
                     if (paymentModeSelect.value === 'ONLINE' && slipFileInput.files[0]) {
                         try {
@@ -1546,7 +1551,6 @@
                     localStorage.setItem('bt_active_sessions', JSON.stringify(activeSessions));
 
                 } else {
-                    // START GAME
                     const activeShift = JSON.parse(localStorage.getItem('cuedesk_active_shift') || 'null');
                     if (!activeShift || !activeShift.isOpen) {
                         alert('Please click "Open Snooker Club" at the top before starting games!');
