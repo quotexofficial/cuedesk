@@ -16,47 +16,6 @@
 
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Futuristic Live Smart Revenue, Expense & Credit Bar Styles */
-        .smart-revenue-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, rgba(17, 17, 22, 0.95), rgba(8, 8, 10, 0.98));
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
-            border-radius: var(--radius-lg);
-            padding: 1.2rem 2rem;
-            margin: 1.5rem 2rem 0 2rem;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 900;
-            font-family: monospace;
-        }
-
-        .stat-game { color: #2a9d8f; text-shadow: 0 0 10px rgba(42, 157, 143, 0.5); }
-        .stat-canteen { color: #e76f51; text-shadow: 0 0 10px rgba(231, 111, 81, 0.5); }
-        .stat-expense { color: #ff4d4d; text-shadow: 0 0 10px rgba(255, 77, 77, 0.5); }
-        .stat-credit { color: #f4a261; text-shadow: 0 0 10px rgba(244, 162, 97, 0.5); }
-        .stat-profit { color: #d4af37; text-shadow: 0 0 12px rgba(212, 175, 55, 0.7); }
-
         /* Expense & Credit Action Buttons */
         .management-action-bar {
             display: flex;
@@ -503,7 +462,7 @@
                 background-color: var(--bg-card);
             }
             .sidebar.active { left: 0; }
-            .shift-status-panel, .status-overview-panel, .smart-revenue-bar, .management-action-bar {
+            .shift-status-panel, .status-overview-panel, .finance-workspace {
                 margin: 1rem 1rem 0 1rem;
                 padding: 1rem;
             }
@@ -525,7 +484,6 @@
         }
 
         /* CUEDESK futuristic finance workspace */
-        .smart-revenue-bar { margin: 1.25rem 2rem 0; padding: 1.25rem 1.5rem; background: linear-gradient(135deg, rgba(10,18,27,.98), rgba(12,13,22,.98)); border: 1px solid rgba(57,217,168,.22); box-shadow: 0 12px 36px rgba(0,0,0,.22), inset 0 1px rgba(255,255,255,.025); }
         .finance-workspace { margin: 1.5rem 2rem 2rem; padding: 1.5rem; border: 1px solid rgba(57,217,168,.2); border-radius: var(--radius-lg); background: linear-gradient(145deg, rgba(13,21,30,.98), rgba(10,13,20,.98)); box-shadow: 0 16px 40px rgba(0,0,0,.2); }
         .finance-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
         .finance-eyebrow { color:#39d9a8; text-transform:uppercase; letter-spacing:2px; font-size:.72rem; font-weight:800; margin-bottom:.45rem; }
@@ -538,7 +496,7 @@
         .btn-action-custom { border-color:rgba(57,217,168,.24); background:rgba(57,217,168,.055); color:#67e7bd; padding:.8rem 1rem; }
         .btn-action-custom:hover { border-color:#39d9a8; background:rgba(57,217,168,.12); transform:translateY(-1px); }
         #expense-list > div, #credit-list > div, #sale-list > div { border:1px solid rgba(255,255,255,.055); border-radius:10px; padding:.85rem !important; margin:.55rem 0; background:rgba(255,255,255,.025); }
-        @media (max-width: 700px) { .smart-revenue-bar, .finance-workspace { margin-left:1rem; margin-right:1rem; } .finance-workspace { padding:1rem; } .management-action-bar { display:grid; grid-template-columns:1fr; } .btn-action-custom { width:100%; } }
+        @media (max-width: 700px) { .finance-workspace { margin-left:1rem; margin-right:1rem; padding:1rem; } .management-action-bar { display:grid; grid-template-columns:1fr; } .btn-action-custom { width:100%; } }
 
     </style>
 </head>
@@ -578,39 +536,6 @@
                 </div>
             </header>
 
-            <!-- LIVE SMART REVENUE, EXPENSES & CREDIT BAR -->
-            <div class="smart-revenue-bar">
-                <div class="stat-item">
-                    <span class="stat-label">🎮 Game Income</span>
-                    <span class="stat-value stat-game" id="game-income-display">Rs. 0</span>
-                </div>
-                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
-                <div class="stat-item">
-                    <span class="stat-label">💵 Total Sales</span>
-                    <span class="stat-value stat-game" id="total-sales-display">Rs. 0</span>
-                </div>
-                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
-                <div class="stat-item">
-                    <span class="stat-label">☕ Other Sales / Credit Payments</span>
-                    <span class="stat-value stat-canteen" id="canteen-income-display">Rs. 0</span>
-                </div>
-                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
-                <div class="stat-item">
-                    <span class="stat-label">📉 Total Expenses</span>
-                    <span class="stat-value stat-expense" id="total-expense-display">Rs. 0</span>
-                </div>
-                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
-                <div class="stat-item">
-                    <span class="stat-label">🤝 Outstanding Credits</span>
-                    <span class="stat-value stat-credit" id="total-credit-display">Rs. 0</span>
-                </div>
-                <div style="width: 1px; height: 35px; background: rgba(255,255,255,0.1);"></div>
-                <div class="stat-item">
-                    <span class="stat-label">💰 Net Profit</span>
-                    <span class="stat-value stat-profit" id="net-profit-display">Rs. 0</span>
-                </div>
-            </div>
-
             <!-- Shift Status Control Panel (Open / Close Snooker) -->
             <section class="shift-status-panel">
                 <div class="shift-info">
@@ -648,16 +573,16 @@
                 <div class="tables-grid" id="tables-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;"></div>
             </main>
 
-            <!-- Dedicated finance management workspace: edit records here; dashboard totals update automatically. -->
+            <!-- Dedicated finance management workspace: edit records here. -->
             <section class="finance-workspace" id="finance-manager">
                 <div class="finance-heading">
                     <div>
                         <div class="finance-eyebrow">Control Center / Finance</div>
                         <h3 class="finance-title">Finance Management</h3>
-                        <p class="finance-subtitle">Manage expenses, customer credits and additional sales in one place. Changes update the live financial summary automatically.</p>
+                        <p class="finance-subtitle">Manage expenses, customer credits and additional sales in one place.</p>
                     </div>
                     <div style="display:flex;align-items:center;gap:.5rem;color:#39d9a8;font-size:.78rem;font-weight:700;border:1px solid rgba(57,217,168,.22);background:rgba(57,217,168,.06);padding:.55rem .75rem;border-radius:999px;white-space:nowrap;">
-                        <span style="width:7px;height:7px;background:#39d9a8;border-radius:50%;box-shadow:0 0 10px #39d9a8;"></span> LIVE TOTALS
+                        <span style="width:7px;height:7px;background:#39d9a8;border-radius:50%;box-shadow:0 0 10px #39d9a8;"></span> LIVE RECORDS
                     </div>
                 </div>
                 <div class="management-action-bar">
@@ -864,14 +789,22 @@
 
             let currentUser = null;
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                currentUser = user;
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session && session.user) {
+                    currentUser = session.user;
+                } else {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) currentUser = user;
+                }
+
                 if (!currentUser) {
                     window.location.href = 'index.html';
                     return;
                 }
             } catch (err) {
                 console.error("Auth check failed", err);
+                window.location.href = 'index.html';
+                return;
             }
 
             const saleModal = document.getElementById('sale-modal');
@@ -894,7 +827,7 @@
                 }
 
                 e.target.reset(); expenseModal.classList.remove('active');
-                await renderFinanceLists(); await updateSmartRevenueBar();
+                await renderFinanceLists();
                 alert('Expense saved and synced across devices!');
             });
 
@@ -914,7 +847,7 @@
                 }
 
                 e.target.reset(); creditModal.classList.remove('active');
-                await renderFinanceLists(); await updateSmartRevenueBar();
+                await renderFinanceLists();
                 alert('Credit record saved and synced across devices!');
             });
 
@@ -934,7 +867,7 @@
                 }
 
                 e.target.reset(); saleModal.classList.remove('active');
-                await renderFinanceLists(); await updateSmartRevenueBar();
+                await renderFinanceLists();
                 alert('Sale saved and synced across devices!');
             });
 
@@ -1003,7 +936,7 @@
                     }
 
                     alert(newAmount === 0 ? 'Fully paid! Received amount sales mein add ho gaya aur udhar clear hai.' : `Partial payment saved. Remaining udhar: Rs. ${newAmount}.`);
-                    await renderFinanceLists(); await updateSmartRevenueBar(); return;
+                    await renderFinanceLists(); return;
                 }
 
                 const deleteType = e.target.getAttribute('data-fin-delete');
@@ -1022,7 +955,7 @@
                     localStorage.setItem(keys[deleteType], JSON.stringify(items.filter(x => String(x.id) !== String(itemId))));
                 }
 
-                await renderFinanceLists(); await updateSmartRevenueBar();
+                await renderFinanceLists();
             });
 
             await fetchSupabaseClubProfile();
@@ -1052,55 +985,12 @@
                 }
             });
 
-            // LIVE SMART REVENUE, EXPENSES & NET PROFIT CALCULATOR BAR (Supabase Synced)
-            async function updateSmartRevenueBar() {
-                let totalGameIncome = 0;
-                let totalOtherSales = 0;
-                let totalExpense = 0;
-                let totalCredit = 0;
-
-                try {
-                    const { data: sessions } = await supabase.from('game_sessions').select('*');
-                    if (sessions) totalGameIncome = sessions.reduce((sum, item) => sum + Number(item.total_bill || item.bill || 0), 0);
-
-                    const { data: cants } = await supabase.from('canteen_sales').select('*');
-                    if (cants) totalOtherSales = cants.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-
-                    const { data: exp } = await supabase.from('club_expenses').select('*');
-                    if (exp) totalExpense = exp.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-
-                    const { data: cred } = await supabase.from('club_credits').select('*');
-                    if (cred) totalCredit = cred.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
-                } catch (e) {
-                    const localHistory = JSON.parse(localStorage.getItem('bare_tallies_history') || '[]');
-                    totalGameIncome = localHistory.reduce((sum, item) => sum + Number(item.bill || 0), 0);
-                    const otherSales = JSON.parse(localStorage.getItem('cuedesk_other_sales') || '[]');
-                    totalOtherSales = otherSales.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-                    const expenses = JSON.parse(localStorage.getItem('cuedesk_expenses') || '[]');
-                    totalExpense = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-                    const credits = JSON.parse(localStorage.getItem('cuedesk_credits') || '[]');
-                    totalCredit = credits.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
-                }
-
-                const totalSales = totalGameIncome + totalOtherSales;
-                const netProfit = totalSales - totalExpense;
-
-                document.getElementById('game-income-display').textContent = money(totalGameIncome);
-                document.getElementById('canteen-income-display').textContent = money(totalOtherSales);
-                document.getElementById('total-sales-display').textContent = money(totalSales);
-                document.getElementById('total-expense-display').textContent = money(totalExpense);
-                document.getElementById('total-credit-display').textContent = money(totalCredit);
-                document.getElementById('net-profit-display').textContent = money(netProfit);
-            }
-            
-            await updateSmartRevenueBar();
             await renderFinanceLists();
 
             // Real-time synchronization subscription for multi-device live updates
             try {
                 supabase.channel('public-db-changes')
                     .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
-                        await updateSmartRevenueBar();
                         await renderFinanceLists();
                     })
                     .subscribe();
@@ -1565,7 +1455,6 @@
                 }
 
                 updateOverviewCounts();
-                await updateSmartRevenueBar();
                 renderTablesUI();
                 closeManageModal();
             });
