@@ -508,9 +508,19 @@
             .apple-animated-amount { font-size: 2.2rem; }
         }
 
+        /* PRINT STYLING FIX TO PREVENT BLANK PAGES */
+        #printable-sales-report, #printable-single-bill {
+            display: none;
+        }
+
         @media print {
-            body * { visibility: hidden; }
-            #printable-sales-report, #printable-sales-report * { visibility: visible; }
+            body * {
+                visibility: hidden !important;
+            }
+            #printable-sales-report, #printable-sales-report *, 
+            #printable-single-bill, #printable-single-bill * {
+                visibility: visible !important;
+            }
             #printable-sales-report {
                 position: absolute;
                 left: 0;
@@ -519,6 +529,15 @@
                 color: #000;
                 background: #fff;
                 padding: 20px;
+            }
+            #printable-single-bill {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: block !important;
+                background: #fff !important;
+                color: #000 !important;
             }
         }
 
@@ -722,7 +741,7 @@
         </div>
     </div>
 
-    <div id="printable-sales-report" style="display: none;">
+    <div id="printable-sales-report">
         <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
             <h1 style="margin: 0; font-size: 24px; color: #000;" id="pdf-club-title">CUEDESK SNOOKER CLUB</h1>
             <p style="margin: 5px 0; font-size: 14px;">Shift Final Sales & Revenue Report</p>
@@ -748,16 +767,16 @@
         </div>
     </div>
 
-    <!-- Printable Single Bill Box -->
-    <div id="printable-single-bill" style="display: none;">
-        <div style="text-align: center; padding: 20px; font-family: monospace; color: #000; background: #fff;">
-            <h2 id="print-bill-club" style="margin: 0 0 5px 0;">CUEDESK SNOOKER CLUB</h2>
+    <!-- Printable Single Thermal Receipt Bill Area -->
+    <div id="printable-single-bill">
+        <div style="width: 280px; margin: 0 auto; text-align: center; padding: 15px; font-family: monospace; color: #000; background: #fff; border: 1px solid #ccc;">
+            <h2 id="print-bill-club" style="margin: 0 0 5px 0; font-size: 18px;">CUEDESK SNOOKER CLUB</h2>
             <p style="margin: 0; font-size: 12px;">Snooker Game Session Bill</p>
-            <hr style="border: dashed 1px #000; margin: 10px 0;">
-            <div id="print-bill-body" style="text-align: left; font-size: 14px; line-height: 1.5;"></div>
-            <hr style="border: dashed 1px #000; margin: 10px 0;">
-            <p style="font-size: 12px; margin: 5px 0;">Thank you! Visit Again</p>
-            <p style="font-size: 10px; margin: 0;">CUEDESK by Rehan</p>
+            <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+            <div id="print-bill-body" style="text-align: left; font-size: 13px; line-height: 1.5;"></div>
+            <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+            <p style="font-size: 12px; margin: 5px 0; font-weight: bold;">Thank you! Visit Again</p>
+            <p style="font-size: 10px; margin: 0; color: #444;">CUEDESK by Rehan</p>
         </div>
     </div>
 
@@ -769,7 +788,7 @@
             <form id="game-form">
                 <input type="hidden" id="active-table-id">
                 
-                <!-- START GAME FIELDS (Name field removed for instant start) -->
+                <!-- START GAME FIELDS -->
                 <div class="form-group" id="start-game-fields">
                     <div class="form-group">
                         <label class="form-label">Select Game Type</label>
@@ -789,7 +808,7 @@
                     </div>
                 </div>
 
-                <!-- STOP & BILL / PAYMENT FIELDS (Player Name optional here) -->
+                <!-- STOP & BILL / PAYMENT FIELDS WITH GAME MULTIPLIER -->
                 <div class="form-group" id="stop-game-fields" style="display: none;">
                     <div style="background: rgba(212,175,55,0.08); padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
                         <p style="margin:0 0 0.3rem 0; font-size:0.85rem; color:var(--text-muted);">Active Game Info:</p>
@@ -798,6 +817,10 @@
                     <div class="form-group">
                         <label class="form-label">Player / Customer Name (Optional)</label>
                         <input type="text" id="stop-player-name" class="form-input" placeholder="e.g. Ali Khan (Leave blank for Walk-in)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Games Played / Multiplier</label>
+                        <input type="number" id="games-multiplier" class="form-input" value="1" min="1" max="50" placeholder="1" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Payment Mode</label>
@@ -908,7 +931,7 @@
                     const osc1 = audioCtx.createOscillator();
                     const gain1 = audioCtx.createGain();
                     osc1.type = 'sine';
-                    osc1.frequency.setValueAtTime(1318.51, audioCtx.currentTime); // E6
+                    osc1.frequency.setValueAtTime(1318.51, audioCtx.currentTime);
                     gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
                     gain1.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
                     
@@ -922,7 +945,7 @@
                         const osc2 = audioCtx.createOscillator();
                         const gain2 = audioCtx.createGain();
                         osc2.type = 'sine';
-                        osc2.frequency.setValueAtTime(1760.00, audioCtx.currentTime); // A6
+                        osc2.frequency.setValueAtTime(1760.00, audioCtx.currentTime);
                         gain2.gain.setValueAtTime(0.4, audioCtx.currentTime);
                         gain2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.45);
                         
@@ -961,10 +984,7 @@
 
                 setTimeout(() => {
                     overlay.classList.remove('active');
-                    
-                    // Show Bill Modal with Print option after animation
                     showBillReceiptModal(billDetails);
-
                     if (typeof onComplete === 'function') onComplete();
                 }, 1400);
             }
@@ -974,13 +994,14 @@
                 lastPrintedBillData = details;
                 const contentDiv = document.getElementById('bill-receipt-content');
                 contentDiv.innerHTML = `
-                    <div><b>Table:</b> Table ${details.tableId}</div>
-                    <div><b>Player:</b> ${details.playerName}</div>
-                    <div><b>Game Type:</b> ${details.gameType}</div>
-                    <div><b>Format:</b> ${details.format}</div>
+                    <div><b>Table No:</b> Table ${details.tableId}</div>
+                    <div><b>Player Name:</b> ${details.playerName}</div>
+                    <div><b>Game Type:</b> ${details.gameType} (${details.format})</div>
+                    <div><b>Games Played:</b> ${details.multiplier} Game(s)</div>
+                    <div><b>Rate per Game:</b> Rs. ${details.baseRate}</div>
                     <div><b>Duration:</b> ${details.durationMins} minutes</div>
-                    <div><b>Payment Mode:</b> ${details.paymentMode}</div>
-                    <div style="margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 1.1rem; color: var(--gold-primary);"><b>Total Bill: Rs. ${details.bill}</b></div>
+                    <div><b>Payment Method:</b> ${details.paymentMode}</div>
+                    <div style="margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 1.15rem; color: var(--gold-primary);"><b>Total Bill: Rs. ${details.bill}</b></div>
                 `;
                 billReceiptModal.classList.add('active');
             }
@@ -995,12 +1016,13 @@
                     <b>Date/Time:</b> ${new Date().toLocaleString()}<br>
                     <b>Table No:</b> Table ${d.tableId}<br>
                     <b>Player Name:</b> ${d.playerName}<br>
-                    <b>Game Type:</b> ${d.gameType}<br>
-                    <b>Format:</b> ${d.format}<br>
-                    <b>Duration:</b> ${d.durationMins} Mins<br>
-                    <b>Payment:</b> ${d.paymentMode}<br>
-                    -----------------------------------<br>
-                    <b>TOTAL AMOUNT: Rs. ${d.bill}</b>
+                    <b>Game Type:</b> ${d.gameType} (${d.format})<br>
+                    <b>Games Multiplier:</b> ${d.multiplier} Game(s)<br>
+                    <b>Base Rate:</b> Rs. ${d.baseRate}<br>
+                    <b>Total Duration:</b> ${d.durationMins} Mins<br>
+                    <b>Payment Mode:</b> ${d.paymentMode}<br>
+                    ----------------------------------<br>
+                    <b style="font-size:15px;">TOTAL BILL: Rs. ${d.bill}</b>
                 `;
 
                 const printDiv = document.getElementById('printable-single-bill');
@@ -1186,6 +1208,7 @@
             const startGameFields = document.getElementById('start-game-fields');
             const stopGameFields = document.getElementById('stop-game-fields');
             const stopPlayerNameInput = document.getElementById('stop-player-name');
+            const gamesMultiplierInput = document.getElementById('games-multiplier');
             const activeSummaryText = document.getElementById('active-summary-text');
             const gameTypeSelect = document.getElementById('game-type');
             const formatGroup = document.getElementById('format-group');
@@ -1572,6 +1595,7 @@
 
                     const session = activeSessions[tableId];
                     stopPlayerNameInput.value = session.playerName || '';
+                    gamesMultiplierInput.value = 1;
                     activeSummaryText.textContent = `Game: ${session.gameType.toUpperCase()} (${session.format.toUpperCase()}) Started at ${new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
                     modalActionBtn.textContent = 'End Game & Process Payment';
@@ -1580,7 +1604,7 @@
                         slipUploadGroup.style.display = 'block';
                     }
                 } else {
-                    // START GAME MODE (Name field completely removed)
+                    // START GAME MODE
                     startGameFields.style.display = 'block';
                     stopGameFields.style.display = 'none';
                     pricePreview.style.display = 'block';
@@ -1632,7 +1656,7 @@
                 let activeSessions = state ? (state.active_sessions || {}) : {};
 
                 if (activeSessions[tableId]) {
-                    // STOP & BILL EXECUTION
+                    // STOP & BILL EXECUTION (MATH CALCULATION WITH MULTIPLIER)
                     clearInterval(timerIntervals[tableId]);
                     const session = activeSessions[tableId];
                     const rates = getRates();
@@ -1640,13 +1664,23 @@
                     const durationSecs = Math.floor((Date.now() - session.startTime) / 1000);
                     const durationMins = Math.max(1, Math.ceil(durationSecs / 60));
 
+                    const multiplier = Math.max(1, parseInt(gamesMultiplierInput.value) || 1);
+
+                    let baseRate = 0;
+                    if (session.gameType === 'century') {
+                        baseRate = rates.century;
+                    } else if (session.gameType === 'full-frame') {
+                        baseRate = session.format === 'single' ? rates.fullframeSingle : rates.fullframeDouble;
+                    } else {
+                        baseRate = session.format === 'single' ? rates.oneballSingle : rates.oneballDouble;
+                    }
+
+                    // Complete Bill Math Calculation
                     let bill = 0;
                     if (session.gameType === 'century') {
-                        bill = durationMins * rates.century;
-                    } else if (session.gameType === 'full-frame') {
-                        bill = session.format === 'single' ? rates.fullframeSingle : rates.fullframeDouble;
+                        bill = (durationMins * baseRate) * multiplier;
                     } else {
-                        bill = session.format === 'single' ? rates.oneballSingle : rates.oneballDouble;
+                        bill = baseRate * multiplier;
                     }
 
                     const finalPlayerName = stopPlayerNameInput.value.trim() || session.playerName || 'Walk-in Player';
@@ -1680,6 +1714,8 @@
                         gameType: String(session.gameType).toUpperCase(),
                         format: session.gameType === 'century' ? 'N/A' : String(session.format).toUpperCase(),
                         durationMins,
+                        multiplier,
+                        baseRate,
                         paymentMode,
                         bill
                     };
@@ -1720,7 +1756,7 @@
                     });
 
                 } else {
-                    // START GAME EXECUTION (Instant start without name requirement)
+                    // START GAME EXECUTION
                     if (!state || !state.shift_open) {
                         alert('Please click "Open Snooker Club" at the top before starting games!');
                         return;
