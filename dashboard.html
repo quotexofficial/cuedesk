@@ -997,7 +997,7 @@
                     <div><b>Table No:</b> Table ${details.tableId}</div>
                     <div><b>Player Name:</b> ${details.playerName}</div>
                     <div><b>Game Type:</b> ${details.gameType} (${details.format})</div>
-                    <div><b>Games Played:</b> ${details.multiplier} Game(s)</div>
+                    <div><b>Games Multiplier:</b> ${details.multiplier} Game(s)</div>
                     <div><b>Rate per Game:</b> Rs. ${details.baseRate}</div>
                     <div><b>Duration:</b> ${details.durationMins} minutes</div>
                     <div><b>Payment Method:</b> ${details.paymentMode}</div>
@@ -1656,7 +1656,7 @@
                 let activeSessions = state ? (state.active_sessions || {}) : {};
 
                 if (activeSessions[tableId]) {
-                    // STOP & BILL EXECUTION (MATH CALCULATION WITH MULTIPLIER)
+                    // STOP & BILL EXECUTION (MATH CALCULATION WITH MULTIPLIER & HISTORY SYNC)
                     clearInterval(timerIntervals[tableId]);
                     const session = activeSessions[tableId];
                     const rates = getRates();
@@ -1675,7 +1675,7 @@
                         baseRate = session.format === 'single' ? rates.oneballSingle : rates.oneballDouble;
                     }
 
-                    // Complete Bill Math Calculation
+                    // Complete Bill Math Calculation with Multiplier
                     let bill = 0;
                     if (session.gameType === 'century') {
                         bill = (durationMins * baseRate) * multiplier;
@@ -1685,6 +1685,7 @@
 
                     const finalPlayerName = stopPlayerNameInput.value.trim() || session.playerName || 'Walk-in Player';
                     const paymentMode = paymentModeSelect.value;
+                    const gameFormatText = session.gameType === 'century' ? `N/A (${multiplier} Games)` : `${String(session.format).toUpperCase()} (${multiplier} Games)`;
 
                     let slipBase64 = null;
                     if (paymentMode === 'ONLINE' && slipFileInput.files[0]) {
@@ -1700,7 +1701,7 @@
                         table_id: parseInt(tableId),
                         player_name: finalPlayerName,
                         game_type: String(session.gameType).toUpperCase(),
-                        game_format: session.gameType === 'century' ? 'N/A' : String(session.format).toUpperCase(),
+                        game_format: gameFormatText,
                         duration_minutes: parseInt(durationMins),
                         total_bill: parseFloat(bill),
                         payment_mode: paymentMode
@@ -1712,7 +1713,7 @@
                         tableId,
                         playerName: finalPlayerName,
                         gameType: String(session.gameType).toUpperCase(),
-                        format: session.gameType === 'century' ? 'N/A' : String(session.format).toUpperCase(),
+                        format: gameFormatText,
                         durationMins,
                         multiplier,
                         baseRate,
@@ -1722,8 +1723,12 @@
 
                     playApplePurchaseAnimation(bill, billDetails, async () => {
                         try {
-                            const { error } = await supabase.from('game_sessions').insert([sessionPayload]);
-                            if (error) throw error;
+                            // Insert into game_sessions so history.html displays it instantly
+                            const { error: sessionError } = await supabase.from('game_sessions').insert([sessionPayload]);
+                            if (sessionError) {
+                                console.error('Supabase game_sessions error:', sessionError);
+                                alert('Error saving to session history: ' + sessionError.message);
+                            }
 
                             if (paymentMode === 'CREDIT') {
                                 await supabase.from('club_credits').insert([{
