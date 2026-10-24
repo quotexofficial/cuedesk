@@ -1113,11 +1113,14 @@
             async function renderFinanceLists() {
                 let expenses = [], credits = [], sales = [];
                 try {
-                    const { data: exp } = await supabase.from('club_expenses').select('*').order('created_at', { ascending: false });
+                    // USER ISOLATION FILTER ADDED HERE TO PREVENT SALES MIXING ACROSS IDS
+                    const { data: exp } = await supabase.from('club_expenses').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
                     if (exp) expenses = exp;
-                    const { data: cred } = await supabase.from('club_credits').select('*').order('created_at', { ascending: false });
+                    
+                    const { data: cred } = await supabase.from('club_credits').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
                     if (cred) credits = cred;
-                    const { data: cants } = await supabase.from('canteen_sales').select('*').order('created_at', { ascending: false });
+                    
+                    const { data: cants } = await supabase.from('canteen_sales').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
                     if (cants) sales = cants;
                 } catch (err) {
                     console.error('Error fetching finance lists from Supabase', err);
@@ -1159,7 +1162,7 @@
                 if (fulfillId) {
                     let credits = [];
                     try {
-                        const { data } = await supabase.from('club_credits').select('*');
+                        const { data } = await supabase.from('club_credits').select('*').eq('user_id', currentUser.id);
                         if (data) credits = data;
                     } catch(err) {}
 
